@@ -1,0 +1,1087 @@
+<!doctype html>
+<!-- ABOUTME: 디캠프 통합DB & 전사 AX 전 직원 발표용 애니메이션 HTML PPT (단일 파일).
+ABOUTME: ←/→ 또는 클릭으로 슬라이드 이동, F 풀스크린. 시각화 밀도 중심 12슬라이드, 헤드라인 명사형·중앙정렬. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>디캠프 통합DB · 전사 AX</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+:root{
+  --bg0:#0a0e24; --bg1:#0f1530; --bg2:#141d40;
+  --ink:#eaf0fb; --ink-dim:#9fb0cc; --ink-faint:#6c7c9c;
+  --line:rgba(255,255,255,.10); --line-strong:rgba(255,255,255,.18);
+  --panel:rgba(255,255,255,.045); --panel-2:rgba(255,255,255,.07);
+  --blue:#4f9cf9; --cyan:#38e1d6; --green:#34d399; --amber:#fbbf24; --rose:#fb7185; --purple:#a78bfa;
+  --grad:linear-gradient(135deg,#4f9cf9 0%,#38e1d6 100%);
+  --grad-soft:linear-gradient(135deg,rgba(79,156,249,.18),rgba(56,225,214,.14));
+  --shadow:0 24px 60px -20px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+  background:radial-gradient(1200px 800px at 78% -10%,rgba(79,156,249,.16),transparent 60%),
+             radial-gradient(900px 700px at 8% 110%,rgba(56,225,214,.12),transparent 55%),
+             linear-gradient(160deg,var(--bg0),var(--bg1) 55%,var(--bg2));
+  color:var(--ink); overflow:hidden; letter-spacing:-.01em;
+}
+.stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:4.4vh 4.5vw;opacity:0;transition:opacity .5s ease}
+.slide.active{display:flex;opacity:1}
+
+/* ---- headline (only text on top, centered) ---- */
+.headline{font-size:2.4vw;font-weight:800;line-height:1.25;text-align:center;max-width:92%;margin:0 auto}
+.headline .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.body-wrap{flex:1;display:flex;align-items:center;justify-content:center;margin-top:2.4vh;min-height:0}
+
+/* ---- title ---- */
+.title-slide{align-items:center;justify-content:center;text-align:center}
+.brand{font-size:1.05vw;font-weight:700;letter-spacing:.3em;color:var(--ink-dim);text-transform:uppercase}
+.title-main{font-size:5.4vw;font-weight:900;line-height:1.08;margin:2.6vh 0 2vh}
+.title-main .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.title-sub{font-size:1.6vw;color:var(--ink-dim);font-weight:500}
+.title-foot{position:absolute;bottom:5vh;color:var(--ink-faint);font-size:1.0vw;letter-spacing:.04em}
+
+/* ---- anim ---- */
+[data-anim]{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+[data-anim].show{opacity:1;transform:none}
+[data-anim="left"]{transform:translateX(-40px)}[data-anim="right"]{transform:translateX(40px)}
+[data-anim="scale"]{transform:scale(.9)}[data-anim="scale"].show{transform:scale(1)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px}
+.tag{display:inline-flex;align-items:center;gap:.5em;padding:.45em .95em;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:1.0vw;font-weight:600}
+
+/* ---- two-column split ---- */
+.split2{display:flex;gap:2.6vw;width:100%;align-items:center;justify-content:center}
+.split2>.col{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.4vh}
+.coltitle{font-size:1.0vw;font-weight:800;color:var(--cyan);letter-spacing:.05em;text-align:center}
+
+/* ===== S1 두 축 배경 ===== */
+.twoaxis{display:flex;align-items:stretch;gap:1.6vw;width:100%;justify-content:center}
+.axis{flex:1;max-width:36vw;padding:2.6vh 1.6vw;border-radius:18px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:.9vh}
+.axis.hot{background:linear-gradient(160deg,rgba(79,156,249,.16),rgba(56,225,214,.1));border-color:rgba(79,156,249,.4)}
+.axis-h{font-size:1.3vw;font-weight:800;color:var(--cyan)}
+.axis.hot .axis-h{color:#bfe0ff}
+.axis-d{font-size:.98vw;color:var(--ink-dim);line-height:1.5}.axis-d b{color:var(--ink)}
+.axis-sub{font-size:.84vw;font-weight:800;color:var(--ink-faint);margin-top:.7vh;letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:.5vw}
+.chip{padding:.4em .85em;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:.86vw;font-weight:600}
+.chip.on{border-color:rgba(52,211,153,.55);color:#bfe7d2}
+.chip.b{border-color:rgba(79,156,249,.55);color:#bfe0ff}
+.axis-link{display:flex;align-items:center;font-size:2.2vw;color:var(--cyan)}
+.axis-cap{text-align:center;margin-top:1.6vh;font-size:1.0vw;color:var(--ink-dim);font-weight:600}.axis-cap b{color:var(--cyan)}
+
+/* ===== S2 전체 구조도 ===== */
+.archmap{display:flex;align-items:stretch;gap:1.2vw;width:100%;justify-content:center}
+.arch-col{flex:1;padding:1.8vh 1.1vw;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.arch-col.back{flex:.92}
+.arch-title{font-size:1.05vw;font-weight:800;color:var(--cyan);text-align:center;margin-bottom:1vh}
+.arch-title small{color:var(--ink-faint);font-weight:600;font-size:.78vw}
+.team-row{display:flex;align-items:center;gap:.7vw;padding:.62vh 0;border-top:1px solid var(--line)}
+.team-row:first-of-type{border-top:none}
+.team-name{min-width:5.2vw;font-weight:800;font-size:.86vw;color:var(--ink)}
+.sys-chips{display:flex;flex-wrap:wrap;gap:.35vw;flex:1}
+.sys{padding:.22em .6em;border-radius:7px;background:var(--panel-2);border:1px solid var(--line);font-size:.74vw;font-weight:600}
+.sys.live{border-color:rgba(52,211,153,.5);color:#bfe7d2}
+.sys.own{border-color:rgba(251,191,36,.5);color:#fbe08a}
+.arch-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;min-width:5vw;position:relative}
+.arch-mid .ar{position:relative;width:100%;height:3px;background:rgba(255,255,255,.12);border-radius:2px}
+.arch-mid .adot{position:absolute;top:-3.5px;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:aflow 2.6s linear infinite}
+@keyframes aflow{0%{left:-6%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:104%;opacity:0}}
+.arch-mid .ml{font-size:.82vw;font-weight:700;color:var(--cyan);writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.1em}
+.db-group{margin-bottom:1vh}
+.db-gh{font-size:.82vw;font-weight:800;color:var(--ink-faint);margin-bottom:.5vh}
+.db-chips{display:flex;flex-wrap:wrap;gap:.4vw}
+.db{padding:.3em .75em;border-radius:8px;background:rgba(79,156,249,.14);border:1px solid rgba(79,156,249,.45);font-size:.82vw;font-weight:700;color:#cfe3ff}
+.db.infra{background:rgba(56,225,214,.12);border-color:rgba(56,225,214,.4);color:#bff0ea}
+.arch-bottom{text-align:center;margin-top:1.4vh;font-size:.95vw;color:var(--ink-dim);font-weight:600}.arch-bottom b{color:var(--cyan)}
+
+/* ===== S2 가로 3단 시간축 (과거→현재→미래) ===== */
+.tri{display:flex;align-items:stretch;gap:.8vw;width:100%}
+.tri-col{flex:1;padding:1.8vh 1.2vw;border-radius:15px;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:.7vh}
+.tri-col.core{flex:1.7;background:linear-gradient(160deg,rgba(79,156,249,.2),rgba(56,225,214,.12));border-color:rgba(79,156,249,.5);box-shadow:0 0 50px -14px rgba(79,156,249,.4)}
+.tri-tag{font-size:.82vw;font-weight:800;letter-spacing:.04em}
+.tri-tag.past{color:var(--ink-faint)}.tri-tag.now{color:var(--cyan)}.tri-tag.future{color:var(--purple)}
+.tri-name{font-weight:800;font-size:1.3vw}.tri-name .ll{color:var(--cyan);font-weight:800;margin-right:.4em}
+.tri-col.core .tri-name .ll{color:#bfe0ff}
+.tri-desc{color:var(--ink-dim);font-size:.9vw;line-height:1.45}
+.tri-chips{display:flex;flex-wrap:wrap;gap:.4vw;margin-top:.4vh}
+.tri-chip{padding:.3em .7em;border-radius:7px;background:var(--panel-2);border:1px solid var(--line);font-size:.78vw;font-weight:600}
+.tri-chip.on{border-color:rgba(52,211,153,.5);color:#bfe7d2}.tri-chip.fu{border-color:rgba(167,139,250,.5);color:#d6c8ff}
+.tri-arrow{display:flex;align-items:center;font-size:1.8vw;color:var(--cyan)}
+.cpgrid{display:grid;grid-template-columns:1fr 1fr;gap:.7vw;margin-top:.5vh}
+
+/* ===== S2 세로 3층 (근간 안에 설계 원칙) — legacy ===== */
+.stack3{width:100%;display:flex;flex-direction:column;gap:.7vh;align-items:center}
+.layer3{width:84%;display:flex;align-items:center;gap:1.6vw;padding:1.9vh 1.8vw;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
+.layer3 .lbl{min-width:4.5vw;font-weight:800;font-size:1.35vw;color:var(--cyan)}
+.layer3 .ttl{font-weight:800;font-size:1.35vw}
+.layer3 .desc{color:var(--ink-dim);font-size:.98vw;margin-top:.3vh}
+.layer3 .tail{margin-left:auto;font-size:.92vw;color:var(--ink-faint);font-weight:700}
+.core3{flex-direction:column;align-items:stretch;gap:1.3vh;background:linear-gradient(135deg,rgba(79,156,249,.2),rgba(56,225,214,.12));border-color:rgba(79,156,249,.5);box-shadow:0 0 50px -12px rgba(79,156,249,.4)}
+.core-head{display:flex;align-items:center;gap:1.6vw}
+.core-head .lbl{min-width:4.5vw;font-weight:800;font-size:1.35vw;color:#bfe0ff}
+.core-head .ttl{font-weight:800;font-size:1.35vw}
+.core-head .desc{color:var(--ink-dim);font-size:.95vw;margin-top:.2vh}
+.core-head .star{margin-left:auto;font-weight:800;font-size:.92vw;padding:.35em .9em;border-radius:999px;background:var(--grad);color:#04122b}
+.core-principles{display:flex;gap:.9vw}
+.cp{flex:1;padding:1.3vh 1vw;border-radius:11px;background:rgba(8,12,32,.55);border:1px solid var(--line);display:flex;flex-direction:column;gap:.3vh}
+.cp .cpi{font-size:1.5vw;line-height:1.1}
+.cp h5{font-size:1.0vw;font-weight:800}
+.cp p{font-size:.8vw;color:var(--ink-dim);line-height:1.4}
+.cp-lead{font-size:.85vw;font-weight:700;color:var(--cyan);margin-bottom:.2vh}
+
+/* ===== S2 mini hook (7창 → SSOT) ===== */
+.hook7{display:flex;align-items:center;gap:.5vw;justify-content:center;flex-wrap:wrap;padding:1vh 0 1.6vh}
+.hook7 .hc{padding:.35em .8em;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);font-size:.82vw;font-weight:600;color:var(--ink-faint)}
+.hook7 .ha{color:var(--cyan);font-size:1.3vw;margin:0 .3vw}
+.hook7 .hssot{padding:.45em 1.1em;border-radius:10px;background:var(--grad);color:#04122b;font-weight:800;font-size:.95vw}
+.hooklead{text-align:center;font-size:1.0vw;color:var(--ink-dim);font-weight:600;margin-bottom:.6vh}
+
+/* ===== S1 scatter (legacy) ===== */
+.s1{display:flex;align-items:center;gap:3vw;width:100%;justify-content:center}
+.scatter{position:relative;width:30vw;height:48vh}
+.scatter .node{position:absolute;padding:.55em 1em;border-radius:12px;background:var(--panel-2);border:1px solid var(--line-strong);font-weight:700;font-size:1.0vw;white-space:nowrap;box-shadow:var(--shadow);transform:rotate(var(--rot))}
+.arrow-join{font-size:3vw;color:var(--cyan);filter:drop-shadow(0 0 12px rgba(56,225,214,.5))}
+.converge{width:20vw;height:20vw;border-radius:24px;background:var(--grad-soft);border:1px solid var(--line-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;box-shadow:var(--shadow)}
+.converge .big{font-size:1.4vw;font-weight:800}.converge .ic{font-size:3vw}.converge .sm{font-size:.95vw;color:var(--ink-dim)}
+
+/* ===== stack (S2 left) ===== */
+.stack{display:flex;flex-direction:column;gap:.8vh}
+.layer{display:flex;align-items:center;gap:1.2vw;padding:2vh 1.4vw;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
+.layer.core{background:linear-gradient(135deg,rgba(79,156,249,.22),rgba(56,225,214,.16));border-color:rgba(79,156,249,.5);box-shadow:0 0 40px -12px rgba(79,156,249,.4)}
+.layer .lbl{min-width:3.2vw;font-weight:800;font-size:1.15vw;color:var(--cyan)}.layer.core .lbl{color:#bfe0ff}
+.layer .ttl{font-weight:800;font-size:1.2vw}.layer .desc{color:var(--ink-dim);font-size:.85vw;margin-top:.2vh}
+.layer .star{margin-left:auto;font-weight:800;font-size:.82vw;padding:.3em .8em;border-radius:999px;background:var(--grad);color:#04122b}
+.layer .nxt{margin-left:auto;font-size:.82vw;color:var(--ink-faint);font-weight:700}
+.flow-tag{align-self:center;color:var(--cyan);font-weight:700;font-size:.85vw}
+
+/* ===== quad (S2 right) ===== */
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:1vw}
+.qcell{padding:2vh 1.2vw;border-radius:14px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:.5vh}
+.qcell .qic{font-size:1.9vw}.qcell h4{font-size:1.1vw;font-weight:800}.qcell p{color:var(--ink-dim);font-size:.82vw;line-height:1.45}
+.archcap{text-align:center;margin-top:1.2vh;font-size:1.0vw;color:var(--ink-dim);font-weight:600}.archcap b{color:var(--cyan)}
+
+/* ===== SVG diagrams ===== */
+.svgwrap{width:100%;height:66vh;display:flex;align-items:center;justify-content:center}
+.svgwrap svg{width:100%;height:100%}
+.diagram path.edge{fill:none;stroke-width:2;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.1s ease}
+.diagram path.edge.drawn{stroke-dashoffset:0}
+.diagram path.edge.dashed{opacity:0;transition:opacity .55s ease}
+.diagram path.edge.dashed.drawn{opacity:.55}
+.diagram .nbox{opacity:0;transition:opacity .5s ease,transform .5s ease;transform:translateY(10px)}
+.diagram .nbox.on{opacity:1;transform:none}
+.diagram text{font-family:inherit;fill:var(--ink)}
+.flowdot{opacity:0;transition:opacity .4s ease}.flowdot.on{opacity:1}
+
+/* ===== flow 5-stage ===== */
+.flow5{display:flex;align-items:stretch;gap:0;width:100%;justify-content:center}
+.stagecol{flex:1;max-width:13.5vw;display:flex;flex-direction:column}
+.stagecol .sh{font-weight:800;font-size:1.0vw;color:var(--cyan);text-align:center;margin-bottom:1.2vh;min-height:2.6em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.25}
+.stagecol .scards{display:flex;flex-direction:column;gap:.6vh;flex:1}
+.scard{padding:1vh .6vw;border-radius:9px;font-size:.8vw;font-weight:600;text-align:center;border:1px solid var(--line);background:var(--panel)}
+.scard.ext{border-color:rgba(167,139,250,.4)}.scard.raw{border-color:rgba(251,191,36,.35)}
+.scard.mas{border-color:rgba(79,156,249,.45);background:rgba(79,156,249,.1)}
+.scard.read{border-color:rgba(207,138,74,.4)}.scard.ui{border-color:rgba(207,90,207,.4)}
+.scard.queue{border-style:dashed;border-color:rgba(251,113,133,.5);color:var(--amber)}
+.connector{width:2.2vw;display:flex;align-items:center;justify-content:center;position:relative}
+.connector .rail{position:absolute;top:0;bottom:0;left:50%;width:2px;background:linear-gradient(var(--cyan),transparent);transform:translateX(-50%);opacity:.3}
+.connector .cdot{position:absolute;left:calc(50% - 4px);width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:cflow 2.6s linear infinite}
+@keyframes cflow{0%{top:-4%;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:104%;opacity:0}}
+.flow-note{text-align:center;margin-top:2vh;font-size:1.0vw;color:var(--ink-dim);font-weight:600}
+
+/* ===== numbers (S5 right) ===== */
+.numgrid{display:grid;grid-template-columns:1fr 1fr;gap:1vw}
+.stat{padding:2vh 1vw;border-radius:14px;background:var(--panel);border:1px solid var(--line);text-align:center}
+.stat .v{font-size:2.6vw;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+.stat .k{margin-top:.6vh;color:var(--ink-dim);font-size:.85vw;font-weight:600}
+.gauge-wrap{display:flex;align-items:center;gap:1.2vw;margin-top:.4vh}
+.gauge{--p:0;position:relative;width:8vw;height:8vw;border-radius:50%;background:conic-gradient(var(--cyan) calc(var(--p)*1%),rgba(255,255,255,.08) 0);flex-shrink:0}
+.gauge::after{content:"";position:absolute;inset:.7vw;border-radius:50%;background:var(--bg1)}
+.gauge .gv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4vw;font-weight:900;z-index:2}
+.gauge-txt{font-size:1.05vw;font-weight:800}.gauge-txt span{color:var(--ink-dim);font-size:.82vw;font-weight:500;display:block;margin-top:.4vh}
+.evidence{display:flex;gap:.7vw;flex-wrap:wrap;margin-top:.4vh}
+.evi{padding:.4em .9em;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:.82vw;font-weight:600}.evi b{color:var(--cyan)}
+
+/* ===== timeline (S5 left) ===== */
+.vtl{position:relative;padding-left:2.6vw}
+.vtl::before{content:"";position:absolute;left:.5vw;top:1vh;bottom:1vh;width:3px;background:linear-gradient(var(--blue),var(--cyan))}
+.vrow{position:relative;display:flex;gap:1vw;align-items:baseline;padding:1.05vh 0}
+.vrow .dot{position:absolute;left:-2.28vw;top:1.7vh;width:1vw;height:1vw;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(56,225,214,.16)}
+.vrow .wk{min-width:4vw;font-weight:800;font-size:1.1vw}
+.vrow .what{min-width:5vw;font-weight:700;font-size:1.0vw;color:var(--cyan)}
+.vrow .out{color:var(--ink-dim);font-size:.85vw}
+
+/* ===== 360 wireframe ===== */
+.wf{width:62vw;max-height:68vh;overflow:hidden;border-radius:18px;border:1px solid var(--line);background:var(--panel);padding:2vh 1.8vw;box-shadow:var(--shadow)}
+.wf-top{display:flex;align-items:center;gap:1.2vw;padding-bottom:1.2vh;border-bottom:1px solid var(--line)}
+.wf-logo{width:3.2vw;height:3.2vw;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:900;color:#04122b;font-size:1.2vw}
+.wf-cname{font-size:1.45vw;font-weight:800}.wf-cname small{color:var(--ink-faint);font-size:.9vw;font-weight:600;margin-left:.4em}
+.wf-meta{color:var(--ink-dim);font-size:.9vw;margin-top:.3vh;display:flex;gap:.6em;flex-wrap:wrap}.wf-meta b{color:var(--ink)}
+.wf-badge{margin-left:auto;text-align:right}
+.wf-tag{display:inline-block;padding:.25em .7em;border-radius:7px;background:rgba(79,156,249,.2);border:1px solid rgba(79,156,249,.5);font-weight:800;font-size:1.0vw}
+.wf-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.8vw;margin-top:1.2vh}
+.wf-sec{padding:1.2vh .9vw;border-radius:11px;background:var(--panel-2);border:1px solid var(--line)}
+.wf-sec .h{font-weight:800;font-size:.92vw;display:flex;align-items:center;gap:.4em;margin-bottom:.4vh;flex-wrap:wrap}
+.wf-sec .src{font-size:.66vw;color:var(--cyan);font-weight:600;background:rgba(56,225,214,.1);padding:.12em .5em;border-radius:6px}
+.wf-sec .ln{color:var(--ink-dim);font-size:.78vw;line-height:1.4}.wf-sec .ln b{color:var(--ink)}
+
+/* ===== cases ===== */
+.cases{display:flex;gap:1.4vw;width:100%;justify-content:center}
+.case{flex:1;max-width:20vw;padding:2.6vh 1.4vw;border-radius:18px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:1vh}
+.case .cic{font-size:2.2vw}.case h4{font-size:1.2vw;font-weight:800;line-height:1.3}.case p{color:var(--ink-dim);font-size:.96vw;line-height:1.5}
+.band{margin-top:2vh;width:100%;text-align:center;padding:1.8vh 2vw;border-radius:14px;background:linear-gradient(135deg,rgba(251,113,133,.14),rgba(251,191,36,.12));border:1px solid rgba(251,113,133,.3);font-weight:700;font-size:1.15vw}
+
+/* ===== matrix + dept (S9) ===== */
+.s9wrap{display:flex;flex-direction:column;gap:2vh;width:100%;align-items:center}
+.matrix{width:62vw}
+.mhead{display:grid;grid-template-columns:6vw 1fr 1fr;margin-bottom:.7vh}
+.mhead div{text-align:center;font-weight:800;font-size:1.1vw;color:var(--cyan);padding:.4vh 0}
+.mrow{display:grid;grid-template-columns:6vw 1fr 1fr;gap:.9vw;margin-bottom:.9vw}
+.maxis{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95vw;color:var(--ink-dim);writing-mode:vertical-rl;transform:rotate(180deg)}
+.mcell{padding:1.8vh 1.2vw;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.mcell.hot{background:linear-gradient(135deg,rgba(79,156,249,.18),rgba(56,225,214,.12));border-color:rgba(79,156,249,.4)}
+.mcell h5{font-size:1.05vw;font-weight:800;margin-bottom:.4vh}.mcell p{color:var(--ink-dim);font-size:.86vw;line-height:1.4}
+.deptchips{display:flex;gap:.7vw;flex-wrap:nowrap;justify-content:center;width:62vw}
+.dchip{flex:1;padding:1.2vh .5vw;border-radius:12px;background:var(--panel);border:1px solid var(--line);text-align:center}
+.dchip .di{font-size:1.5vw}.dchip .dn{font-weight:800;font-size:.85vw;margin:.3vh 0}.dchip .da{color:var(--cyan);font-size:.72vw;line-height:1.3}
+
+/* ===== roadmap + vision (S10) ===== */
+.s10wrap{display:flex;flex-direction:column;gap:3vh;width:100%;align-items:center}
+.road{position:relative;width:74vw;display:flex;justify-content:space-between;padding-top:4vh}
+.road::before{content:"";position:absolute;left:0;right:0;top:5.2vh;height:3px;background:rgba(255,255,255,.12)}
+.road .fillbar{position:absolute;left:0;top:5.2vh;height:3px;width:0;background:var(--grad);transition:width 1.6s ease .3s}
+.mstone{position:relative;width:16vw;text-align:center}
+.mstone .pin{width:1.2vw;height:1.2vw;border-radius:50%;background:var(--bg1);border:3px solid var(--ink-faint);margin:0 auto 1.2vh}
+.mstone.done .pin{border-color:var(--green);background:var(--green)}
+.mstone.now .pin{border-color:var(--amber);background:var(--amber)}
+.mstone.goal .pin{border-color:var(--cyan);background:var(--cyan);box-shadow:0 0 0 6px rgba(56,225,214,.2)}
+.mstone .ph{font-weight:800;font-size:1.1vw}.mstone .dt{color:var(--ink-dim);font-size:.9vw;margin:.3vh 0}.mstone .ds{color:var(--ink-faint);font-size:.82vw;line-height:1.35}
+.flag{font-size:1.5vw}
+.steps{display:flex;align-items:stretch;gap:.9vw;width:74vw}
+.step{flex:1;padding:2.2vh 1.2vw;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.step.here{background:linear-gradient(135deg,rgba(79,156,249,.2),rgba(56,225,214,.12));border-color:rgba(79,156,249,.45)}
+.step .sn{font-size:.85vw;font-weight:800;color:var(--cyan);letter-spacing:.1em}
+.step h4{font-size:1.3vw;font-weight:900;margin:.5vh 0}.step p{color:var(--ink-dim);font-size:.85vw;line-height:1.4}
+.step .badge{display:inline-block;margin-top:.7vh;font-size:.8vw;font-weight:800;color:var(--amber)}
+.arrowx{display:flex;align-items:center;font-size:1.6vw;color:var(--cyan)}
+.premise{text-align:center;padding:1.4vh;border-radius:14px;background:var(--grad-soft);border:1px solid var(--line-strong);font-weight:800;font-size:1.1vw;width:74vw}
+.premise b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ===== closing ===== */
+.close{display:flex;flex-direction:column;align-items:center;gap:3.4vh;width:100%}
+.ba{display:flex;align-items:center;gap:2.6vw}
+.ba .box{width:21vw;height:28vh;border-radius:18px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;padding:2vw;font-weight:700;font-size:1.15vw;background:var(--panel);position:relative}
+.ba .box .cap{position:absolute;top:1.2vh;left:0;right:0;font-size:.9vw;color:var(--ink-faint);font-weight:700;letter-spacing:.1em}
+.ba .box.before{color:var(--ink-faint)}.ba .box.after{background:var(--grad-soft);border-color:var(--line-strong);color:var(--ink)}
+.ba .arr{font-size:2.6vw;color:var(--cyan)}
+.close .line{font-size:2vw;font-weight:900;text-align:center}.close .line .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ===== AI 협업 + 에피소드 (합친 슬라이드) ===== */
+.aistrip{display:flex;align-items:center;justify-content:center;gap:.3vw;width:100%}
+.astep{flex:0 0 auto;min-width:8.2vw;padding:1.4vh .8vw;border-radius:13px;background:var(--panel);border:1px solid var(--line);text-align:center}
+.astep .ei{font-size:1.5vw;line-height:1.2}
+.astep .et{font-size:.86vw;font-weight:700;margin-top:.3vh;line-height:1.3}
+.astep.hot{background:var(--grad);border:none}.astep.hot .et{color:#04122b}
+.aarrow{position:relative;width:2.2vw;height:2px;background:rgba(255,255,255,.16);flex:0 0 auto;border-radius:2px}
+.aarrow .ad{position:absolute;top:-3.5px;left:0;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px var(--cyan);animation:astripflow 2.6s linear infinite}
+@keyframes astripflow{0%{left:-12%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:112%;opacity:0}}
+.aimetrics{display:flex;gap:1vw;justify-content:center;flex-wrap:wrap}
+.aimetric{padding:.5em 1.1em;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:.98vw;font-weight:600}
+.aimetric b{color:var(--cyan)}
+.epics{display:flex;gap:1.4vw;width:100%;justify-content:center}
+.epic{flex:1;max-width:25vw;padding:2.6vh 1.5vw;border-radius:18px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:1.1vh}
+.epic-top{display:flex;align-items:center;gap:.8vw}
+.epic-top .ic{font-size:2vw}
+.epic-top .big{font-size:2.5vw;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+.epic-find{color:var(--ink-faint);font-size:.96vw;line-height:1.45}
+.epic-arrow{font-size:.82vw;font-weight:800;color:var(--cyan);letter-spacing:.02em}
+.epic-fix{font-size:1.05vw;font-weight:700;line-height:1.45}.epic-fix b{color:var(--cyan)}
+.epic-cap{text-align:center;font-size:1.0vw;color:var(--ink-dim);font-weight:600;margin-top:.4vh}
+
+/* ===== journey (S8) ===== */
+.journey{display:flex;flex-direction:column;gap:.9vh;width:100%}
+.jstep{display:flex;gap:1vw;align-items:flex-start;padding:1.5vh 1.1vw;border-radius:13px;border:1px solid var(--line);background:var(--panel)}
+.jstep.dim{opacity:.5}
+.jstep.hot{background:linear-gradient(135deg,rgba(79,156,249,.2),rgba(56,225,214,.12));border-color:rgba(79,156,249,.45)}
+.jstep .jt{font-weight:800;font-size:.88vw;color:var(--cyan);min-width:6.5vw;line-height:1.3}
+.jstep.dim .jt{color:var(--ink-faint)}
+.jstep .jbody{flex:1}
+.jstep .jb{font-size:1.0vw;font-weight:700}.jstep .jb b{color:var(--cyan)}
+.jstep .jd{color:var(--ink-dim);font-size:.82vw;margin-top:.3vh;line-height:1.4}
+/* journey 가로 컬럼 (시간축) */
+.journeyx{display:flex;align-items:stretch;gap:.5vw;width:100%;justify-content:center}
+.jcol{flex:1;padding:2.6vh 1.2vw;border-radius:15px;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:.9vh}
+.jcol.dim{opacity:.62}
+.jcol.hot{background:linear-gradient(160deg,rgba(79,156,249,.2),rgba(56,225,214,.12));border-color:rgba(79,156,249,.5);box-shadow:0 0 40px -14px rgba(79,156,249,.4)}
+.jcol .jxt{font-size:1.0vw;font-weight:800;color:var(--cyan)}
+.jcol.dim .jxt{color:var(--ink-faint)}
+.jcol .jxb{font-size:1.12vw;font-weight:800;line-height:1.32}.jcol .jxb b{color:var(--cyan)}
+.jcol .jxd{font-size:.88vw;color:var(--ink-dim);line-height:1.5}
+.jarrow{display:flex;align-items:center;font-size:1.6vw;color:var(--cyan)}
+/* 경과 간트차트 */
+.gantt{width:94vw;margin:0 auto}
+.grow{display:grid;grid-template-columns:16vw repeat(9,0.58fr) repeat(6,1.55fr);align-items:center;column-gap:.2vw}
+.gantt-year .gyr{text-align:center;font-size:.85vw;font-weight:800;color:var(--ink-dim);padding-bottom:.4vh;border-bottom:1px solid var(--line);margin:0 .3vw .6vh}
+.gantt-month{margin-bottom:.8vh}
+.gantt-month .gm{text-align:center;font-size:.72vw;color:var(--ink-faint)}
+.grow.data{margin:.7vh 0}
+.glabel{padding-right:1vw;text-align:right}
+.glabel .gt{font-weight:800;font-size:1.0vw}
+.glabel .gsub{font-size:.76vw;color:var(--ink-faint);margin-top:.2vh}
+.gbar{height:5.2vh;border-radius:9px;display:flex;align-items:center;padding:0 .9vw;font-size:.82vw;font-weight:700;white-space:nowrap;overflow:hidden;transform:scaleX(0);transform-origin:left;transition:transform .75s cubic-bezier(.2,.7,.2,1)}
+[data-anim].show .gbar{transform:scaleX(1)}
+.gbar.dim{background:rgba(120,134,170,.22);border:1px solid rgba(120,134,170,.4);color:var(--ink-dim)}
+.gbar.warn{background:rgba(251,113,133,.18);border:1px solid rgba(251,113,133,.42);color:#ffc8d0}
+.gbar.hot{background:var(--grad);color:#04122b;font-weight:800;box-shadow:0 0 34px -6px rgba(56,225,214,.65)}
+
+/* ===== question cloud (S9) ===== */
+.qcloud{display:flex;flex-wrap:wrap;gap:.7vw;align-content:flex-start}
+.qcard{padding:1vh 1.05vw;border-radius:12px;border:1px solid var(--line);background:var(--panel);font-size:.92vw;font-weight:700;opacity:0}
+.qcard.show{opacity:1;transition:opacity .6s ease;animation:qfloat 4.5s ease-in-out infinite}
+.qcard.q{border-color:rgba(56,225,214,.45);color:var(--cyan)}
+.qcard.d{border-color:rgba(79,156,249,.45);color:#cfe3ff}
+.qcard.d::before{content:"✓ ";color:var(--blue);font-weight:900}
+.qcard:nth-child(2n){animation-duration:5.2s}.qcard:nth-child(3n){animation-delay:-1.5s}.qcard:nth-child(4n){animation-duration:5.8s;animation-delay:-2.5s}
+@keyframes qfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.qcloud.dense{position:relative;width:100%;max-width:82vw;margin:0 auto;padding:8vh 0 0;justify-content:center;align-content:flex-start;gap:1.4vh .8vw;height:85vh;overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 58%,transparent 96%);mask-image:linear-gradient(to bottom,#000 0%,#000 58%,transparent 96%)}
+.qcloud.dense .qcard{font-size:1.02vw;padding:1.15vh 1.2vw}
+
+/* ===== flow→screen (S6) ===== */
+.s2s{display:flex;flex-direction:column;gap:1.2vh;width:100%;align-items:center}
+.miniflow{display:flex;align-items:center;gap:.7vw;font-size:.82vw;font-weight:700;color:var(--ink-dim)}
+.miniflow .mf{padding:.4em .85em;border-radius:8px;background:var(--panel-2);border:1px solid var(--line)}
+.miniflow .mar{color:var(--cyan);font-size:1vw}
+.miniflow .now{background:var(--grad);color:#04122b;font-weight:800;padding:.45em .95em;border-radius:8px}
+.wf2{width:72vw;max-height:62vh;overflow:hidden;border-radius:18px;border:1px solid var(--line);background:var(--panel);padding:1.6vh 1.4vw;box-shadow:var(--shadow)}
+.wf2 .wf-grid{grid-template-columns:1fr 1fr 1fr;gap:.7vw;margin-top:1vh}
+.wf2 .wf-sec{border-left:3px solid var(--line-strong)}
+.wf-sec.src-kodata{border-left-color:#5acf8f}.wf-sec.src-kiips{border-left-color:#4f9cf9}.wf-sec.src-space{border-left-color:#cf8a4a}
+.wf-sec.src-batch{border-left-color:#fbbf24}.wf-sec.src-global{border-left-color:#34d399}.wf-sec.src-notion{border-left-color:#a78bfa}.wf-sec.src-prog{border-left-color:#38e1d6}.wf-sec.src-person{border-left-color:#fb7185}
+.tpwrap{margin-top:1.1vh;padding:1.1vh 1vw .4vh;border-radius:11px;background:var(--panel-2);border:1px solid var(--line)}
+.tphead{font-weight:800;font-size:.9vw;display:flex;align-items:center;gap:.5em;margin-bottom:.4vh}
+.tphead .nlp{margin-left:auto;font-size:.7vw;font-weight:700;color:#04122b;background:var(--grad);padding:.2em .7em;border-radius:6px}
+.tps{position:relative;display:flex;justify-content:space-between;margin-top:2.2vh}
+.tps::before{content:"";position:absolute;left:1%;right:1%;top:-1.1vh;height:2px;background:rgba(255,255,255,.12)}
+.tpfill{position:absolute;left:1%;top:-1.1vh;height:2px;background:var(--grad);width:0;transition:width 1.5s ease .3s}
+.tp{position:relative;flex:1;text-align:center}
+.tp .dot{width:.7vw;height:.7vw;border-radius:50%;background:var(--cyan);margin:-1.45vh auto .5vh;box-shadow:0 0 0 4px rgba(56,225,214,.15)}
+.tp .lb{font-size:.66vw;color:var(--ink-dim);line-height:1.25;font-weight:600}
+.tp .dt{font-size:.58vw;color:var(--ink-faint)}
+
+/* ===== AI loop (S6) ===== */
+.aicases{display:flex;flex-direction:column;gap:.7vh;margin-top:.2vh}
+.aicase{padding:1vh 1vw;border-radius:11px;background:var(--panel);border:1px solid var(--line);font-size:.84vw;font-weight:600;display:flex;gap:.55em;align-items:flex-start;line-height:1.4}
+.aicase .aic{font-size:1.1vw;line-height:1}.aicase b{color:var(--cyan)}
+.stat .v.txt{font-size:1.7vw}
+
+/* ---- chrome ---- */
+.progress{position:fixed;left:0;top:0;height:3px;background:var(--grad);width:0;z-index:50;transition:width .4s ease}
+.pager{position:fixed;right:2vw;bottom:2.2vh;font-size:.95vw;color:var(--ink-faint);font-weight:700;z-index:50;letter-spacing:.05em}
+.dots{position:fixed;left:50%;transform:translateX(-50%);bottom:2vh;display:flex;gap:.5vw;z-index:50}
+.dots i{width:.5vw;height:.5vw;border-radius:50%;background:rgba(255,255,255,.18);cursor:pointer;transition:.3s}
+.dots i.on{background:var(--cyan);width:1.5vw;border-radius:999px}
+.hint{position:fixed;left:2vw;bottom:2.2vh;font-size:.88vw;color:var(--ink-faint);z-index:50}
+kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:.1em .5em;font-size:.85em}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="stage" id="stage">
+
+<!-- ===== S0 TITLE ===== -->
+<section class="slide title-slide">
+  <div class="brand" data-anim>d·camp &nbsp;|&nbsp; IT팀</div>
+  <h1 class="title-main" data-anim>하나의 디캠프,<br><span class="hl">하나의 데이터</span></h1>
+  <div class="title-sub" data-anim>통합DB와 전사 AX — 지금까지의 실적과 다음 단계</div>
+  <div class="title-foot" data-anim>2026년 5월 · 전 직원 공유</div>
+</section>
+
+<!-- ===== S1 전사 AX 두 축 + 전체 구조도 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>전사 AX의 두 축 — <span class="hl">DX × Data</span></h2>
+  <div class="body-wrap">
+    <div style="display:flex;flex-direction:column;width:100%">
+      <div class="archmap">
+        <div class="arch-col" data-anim="left">
+          <div class="arch-title">① DX 축 · 현업 업무 시스템 <small>작년부터 · dx.dcamp.kr</small></div>
+          <div class="team-row"><div class="team-name">그로스</div><div class="sys-chips"><span class="sys">배치 프로그램</span><span class="sys">기업풀 관리</span><span class="sys">그로스코칭</span><span class="sys">계약·정산</span></div></div>
+          <div class="team-row"><div class="team-name">글로벌</div><div class="sys-chips"><span class="sys">글로벌 OI</span><span class="sys">스타트업뱅킹</span></div></div>
+          <div class="team-row"><div class="team-name">투자</div><div class="sys-chips"><span class="sys">직접투자 관리</span><span class="sys">투자 포트폴리오</span><span class="sys own">AI 심사역</span></div></div>
+          <div class="team-row"><div class="team-name">펀드</div><div class="sys-chips"><span class="sys">출자 펀드</span><span class="sys">운용사 관리</span><span class="sys">펀드 포트폴리오</span></div></div>
+          <div class="team-row"><div class="team-name">홍보마케팅</div><div class="sys-chips"><span class="sys">보도자료</span><span class="sys">보도기사</span></div></div>
+          <div class="team-row"><div class="team-name">리소스</div><div class="sys-chips"><span class="sys live">오피스아워</span><span class="sys live">전문자문</span></div></div>
+          <div class="team-row"><div class="team-name">스페이스</div><div class="sys-chips"><span class="sys live">입주·대관 ↔ ctrlroom</span></div></div>
+          <div class="team-row"><div class="team-name">감사·재무</div><div class="sys-chips"><span class="sys own">일상감사</span><span class="sys own">재무포탈</span></div></div>
+        </div>
+        <div class="arch-mid" data-anim>
+          <div class="ar"><div class="adot" style="animation-delay:0s"></div><div class="adot" style="animation-delay:1.3s"></div></div>
+          <div class="ml">데이터 · API 연동</div>
+          <div class="ar"><div class="adot" style="animation-delay:.6s"></div><div class="adot" style="animation-delay:1.9s"></div></div>
+        </div>
+        <div class="arch-col back" data-anim="right">
+          <div class="arch-title">② Data 축 · 통합DB <small>AX를 위한 기반 인프라</small></div>
+          <div class="db-group">
+            <div class="db-gh">📦 엔티티 데이터베이스</div>
+            <div class="db-chips"><span class="db">기업</span><span class="db">인물</span><span class="db">사업</span><span class="db">미팅</span><span class="db">펀드</span><span class="db">뉴스</span></div>
+          </div>
+          <div class="db-group">
+            <div class="db-gh">⚙️ 공통 인프라</div>
+            <div class="db-chips"><span class="db infra">통합 인증·권한</span><span class="db infra">공통 업무 기능</span><span class="db infra">외부 시스템 연동</span><span class="db infra">데이터 이관·클렌징</span></div>
+          </div>
+          <div class="db-group">
+            <div class="db-gh">🔗 연동 소스</div>
+            <div class="db-chips"><span class="db infra">내부 기간계 · KiiPS</span><span class="db infra">외부 기업정보 · KODATA·혁신의숲</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-bottom" data-anim>DX(접점·업무 혁신)와 Data(기반·통합DB)가 맞물려 전사 AX를 떠받친다 · <b>통합DB = AX를 위한 기반 인프라</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S2 왜·어떻게 설계했나 (후킹 + 3층 + 원칙) ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>왜·어떻게 설계했나 — <span class="hl">흩어진 데이터를 한 구조로</span></h2>
+  <div class="body-wrap">
+    <div style="display:flex;flex-direction:column;width:100%">
+      <div class="hooklead" data-anim>한 회사를 보려 7~8곳을 열던 일 → 데이터 구조부터 다시</div>
+      <div class="hook7" data-anim>
+        <span class="hc">KODATA</span><span class="hc">혁신의숲</span><span class="hc">KiiPS</span><span class="hc">배치 노션</span><span class="hc">투자 시트</span><span class="hc">멘토링 시트</span><span class="hc">PR 시트</span>
+        <span class="ha">➜</span><span class="hssot">하나의 SSOT</span>
+      </div>
+      <div class="tri" style="margin-top:1.2vh">
+        <div class="tri-col" data-anim="left">
+          <div class="tri-tag past">접점 · 지금까지</div>
+          <div class="tri-name"><span class="ll">①</span>현업 업무 시스템</div>
+          <div class="tri-desc">데이터가 생겨나는 곳 — 부서별 단위 시스템</div>
+          <div class="tri-chips"><span class="tri-chip on">전문자문</span><span class="tri-chip on">오피스아워</span><span class="tri-chip on">AI 심사역</span><span class="tri-chip on">재무포탈</span></div>
+        </div>
+        <div class="tri-arrow" data-anim>➜</div>
+        <div class="tri-col core" data-anim>
+          <div class="tri-tag now">근간 · 지금 (오늘의 주제)</div>
+          <div class="tri-name"><span class="ll">②</span>통합DB · SSOT</div>
+          <div class="tri-desc">모든 데이터의 Single Source of Truth — 네 가지 원칙으로 설계</div>
+          <div class="cpgrid">
+            <div class="cp"><div class="cpi">🗄️</div><h5>원본 불가침</h5><p>외부 데이터 원본 영구 보관 · 사본 위에서만 가공</p></div>
+            <div class="cp"><div class="cpi">🎯</div><h5>단일 SSOT</h5><p>회사·인물 수렴점 하나 · “진짜?” 질문 제거</p></div>
+            <div class="cp"><div class="cpi">📝</div><h5>결정 기록화</h5><p>설계 판단 90건 문서화 · 추측 제거</p></div>
+            <div class="cp"><div class="cpi">🧱</div><h5>묶되 나눔</h5><p>한 시스템 안 부서별 안전 격리</p></div>
+          </div>
+        </div>
+        <div class="tri-arrow" data-anim>➜</div>
+        <div class="tri-col" data-anim="right">
+          <div class="tri-tag future">지능 · 다음 단계</div>
+          <div class="tri-name"><span class="ll">③</span>AI 층</div>
+          <div class="tri-desc">정제된 데이터 위에 올릴 미래</div>
+          <div class="tri-chips"><span class="tri-chip fu">AI가 읽는 IR</span><span class="tri-chip fu">회의록 자동 연결</span><span class="tri-chip fu">의사결정 지원</span></div>
+        </div>
+      </div>
+      <div class="archcap" data-anim>실시간 데이터 흐름으로 세 단계가 맞물림 · 구현은 단순하게 — <b>1 monorepo · 1 Cloud Run · 1 Cloud SQL</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S2b 지금까지의 경과 (여정) ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>전문가 파트너들과 고군분투 — <span class="hl">자체개발 이후 폭발적 성과</span></h2>
+  <div class="body-wrap">
+    <div class="split2">
+      <div class="col">
+        <div class="coltitle" data-anim>비전을 현실로 — 거쳐온 과정</div>
+        <div class="journey">
+          <div class="jstep" data-anim><div class="jt">2025 중순</div><div class="jbody"><div class="jb">정보화전략계획(ISP) 수립 · 소프트스퀘어드</div><div class="jd">비전의 전체 그림 — 현업 DX + 통합 Data</div></div></div>
+          <div class="jstep" data-anim><div class="jt">2025 하반기</div><div class="jbody"><div class="jb">IT전문가 자문</div><div class="jd">입찰 과정에서 여러 전문가 의견을 수렴</div></div></div>
+          <div class="jstep" data-anim><div class="jt">2026 상반기</div><div class="jbody"><div class="jb">팩트시트 협업</div><div class="jd">VC·액셀러레이팅 도메인 파트너와</div></div></div>
+          <div class="jstep hot" data-anim><div class="jt">2026 · 5월~</div><div class="jbody"><div class="jb"><b>자체 개발 전환</b></div><div class="jd">AI를 팀원처럼 · 가장 구체적인 성과로 도약</div></div></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="coltitle" data-anim>자체개발 이후 — 성과 J커브</div>
+        <div class="svgwrap" style="height:50vh" data-anim="scale">
+          <svg class="diagram" id="jcurve" viewBox="0 0 620 380" preserveAspectRatio="xMidYMid meet"><g id="jcEls"></g></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S3 핵심 데이터 관계도 (SVG) ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>출처 10여 곳 <span class="hl">→ 하나의 SSOT로 수렴</span></h2>
+  <div class="body-wrap">
+    <div class="svgwrap" data-anim="scale">
+      <svg class="diagram" id="relmap" viewBox="0 0 1280 640" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="edgeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a6acf"/><stop offset="1" stop-color="#4f9cf9"/></linearGradient>
+          <linearGradient id="edgeGin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5acf8f"/><stop offset="1" stop-color="#4f9cf9"/></linearGradient>
+        </defs>
+        <text class="nbox" x="290" y="34" font-size="20" font-weight="800" fill="#a78bfa" text-anchor="middle">📥 외부 출처 (외부 SaaS·서비스)</text>
+        <text class="nbox" x="930" y="34" font-size="20" font-weight="800" fill="#34d399" text-anchor="middle">🏠 내부 출처 (디캠프가 만든 데이터)</text>
+        <g id="relEdges"></g>
+        <g class="nbox">
+          <rect x="240" y="408" width="820" height="200" rx="20" fill="rgba(79,156,249,.07)" stroke="rgba(79,156,249,.3)"/>
+          <text x="650" y="436" font-size="19" font-weight="800" fill="#bfe0ff" text-anchor="middle">⭐ 통합DB 핵심 · Single Source of Truth</text>
+        </g>
+        <g id="relDots"></g>
+        <g id="relNodes"></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S3b 통합DB 내부 관계도 (SVG) ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>시스템 아키텍처 한눈에 — <span class="hl">외부 소스부터 360 화면까지</span></h2>
+  <div class="body-wrap">
+    <div class="svgwrap" data-anim="scale">
+      <svg class="diagram" id="innermap" viewBox="0 0 1500 880" preserveAspectRatio="xMidYMid meet">
+        <g id="innerEdges"></g><g id="innerDots"></g><g id="innerNodes"></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S4 데이터가 흐르는 길 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>5단계 책임 분리 · <span class="hl">한 단계 장애도 전체 무중단</span></h2>
+  <div class="body-wrap">
+    <div style="display:flex;flex-direction:column;width:100%;align-items:center">
+      <div class="svgwrap" style="height:60vh" data-anim="scale">
+        <svg class="diagram" id="flowmap" viewBox="0 0 1500 720" preserveAspectRatio="xMidYMid meet">
+          <g id="flowEdges"></g><g id="flowDots"></g><g id="flowNodes"></g>
+        </svg>
+      </div>
+      <div class="flow-note" data-anim>매칭 애매 → 사람 검수 큐 · 누락 → 자정 자동 재점검 (실제 누락 <b style="color:var(--amber)">29건</b> 선탐지)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S4b 흐른 데이터 → 360 화면 조립 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>흐른 데이터 <span class="hl">→ 회사 360 한 화면으로 조립</span></h2>
+  <div class="body-wrap">
+    <div class="svgwrap" style="height:72vh" data-anim="scale">
+      <svg class="diagram" id="bridge" viewBox="0 0 1480 820" preserveAspectRatio="xMidYMid meet">
+        <text x="157" y="60" font-size="17" font-weight="800" fill="#bfe0ff" text-anchor="middle" class="nbox">⑤ 통합 SSOT</text>
+        <text x="1000" y="60" font-size="17" font-weight="800" fill="#cf5acf" text-anchor="middle" class="nbox">회사 360 화면 — ㈜루트릭스</text>
+        <g id="bridgeEdges"></g><g id="bridgeDots"></g><g id="bridgeNodes"></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S5 5주 + 숫자 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>자체개발 4~5주의 결과 — <span class="hl">숫자로 증명</span></h2>
+  <div class="body-wrap">
+    <div style="display:flex;flex-direction:column;gap:3vh;align-items:center;width:100%">
+      <div class="coltitle" data-anim>지금 통합DB(SSOT)에 담긴 것</div>
+      <div class="numgrid" style="grid-template-columns:repeat(4,1fr);width:84vw">
+        <div class="stat" data-anim><div class="v counter" data-to="906">0</div><div class="k">기업</div></div>
+        <div class="stat" data-anim><div class="v counter" data-to="1207">0</div><div class="k">인물</div></div>
+        <div class="stat" data-anim><div class="v counter" data-to="1248">0</div><div class="k">자펀드 포트폴리오</div></div>
+        <div class="stat" data-anim><div class="v counter" data-to="923">0</div><div class="k">회사–인물 연결</div></div>
+      </div>
+      <div class="gauge-wrap" data-anim>
+        <div class="gauge" id="gauge80"><div class="gv">80%+</div></div>
+        <div class="gauge-txt">산재 데이터 정제 완료<span>AI를 올릴 토대 80% 완성 신호</span></div>
+      </div>
+      <div class="evidence" data-anim>
+        <div class="evi">자동 수집 <b>10여 곳</b></div><div class="evi">변경 이력 <b>200건+</b></div><div class="evi">결정 기록 <b>90건</b></div><div class="evi">자동 테스트 <b>250건+</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S6b 질문/결정 카드 월 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>결정 기록 <span class="hl">90건</span> — AI와 이렇게 따져 물었다</h2>
+  <div class="body-wrap" style="align-items:flex-start">
+    <div class="qcloud dense">
+      <div class="qcard q">왜 인프라는 구글(GCP)인가?</div>
+      <div class="qcard d">통합DB = 별도 서버 아닌 한 영역</div>
+      <div class="qcard q">왜 DB는 Postgres인가?</div>
+      <div class="qcard d">단일 DB + 영역(스키마) 분리</div>
+      <div class="qcard q">왜 컴퓨팅은 Cloud Run인가?</div>
+      <div class="qcard d">실제 데이터부터 보고 모델 확정</div>
+      <div class="qcard q">왜 기술 스택은 Next.js + TypeScript + Drizzle인가?</div>
+      <div class="qcard d">외부 데이터는 임시 보관 후 흡수</div>
+      <div class="qcard q">왜 로그인은 Cloudflare Access + Auth.js인가?</div>
+      <div class="qcard d">변경 이벤트 자동 기록 (Outbox)</div>
+      <div class="qcard q">왜 기업 ID를 UUID로 했나?</div>
+      <div class="qcard d">관측·감사 로그 표준</div>
+      <div class="qcard q">왜 사업자번호로 키를 안 잡나?</div>
+      <div class="qcard d">0단계는 데이터 조사부터</div>
+      <div class="qcard q">왜 Kafka 대신 Outbox인가?</div>
+      <div class="qcard d">미래 통합은 자연 수렴</div>
+      <div class="qcard q">왜 BigQuery를 제외했나?</div>
+      <div class="qcard d">Supabase → Cloud SQL 이전 전략</div>
+      <div class="qcard q">왜 Looker 대신 Recharts인가?</div>
+      <div class="qcard d">패밀리사 분류 체계 정식화</div>
+      <div class="qcard q">왜 Redis를 안 쓰나?</div>
+      <div class="qcard d">외부 사용자 6종 + 심사위원 자동 만료</div>
+      <div class="qcard q">왜 Neo4j를 안 쓰나?</div>
+      <div class="qcard d">시스템명을 디캠프 실조직 기준으로 정리</div>
+      <div class="qcard q">왜 GKE/쿠버네티스가 아닌가?</div>
+      <div class="qcard d">AI 회의록은 LLM + 관리자 승인</div>
+      <div class="qcard q">왜 mTLS를 안 쓰나?</div>
+      <div class="qcard d">기업 분류체계 다중화</div>
+      <div class="qcard q">왜 7개 분리 대신 modular monolith?</div>
+      <div class="qcard d">통합 모델 — 4관계 + 5종류</div>
+      <div class="qcard q">왜 read model을 물리 테이블로?</div>
+      <div class="qcard d">시트·노션 등 비DB 흡수 표준</div>
+      <div class="qcard q">왜 RLS + App 권한 hybrid인가?</div>
+      <div class="qcard d">Google SSO 단일 인증</div>
+      <div class="qcard q">왜 Cloudflare Zero Trust를 뺐나?</div>
+      <div class="qcard d">modular monolith × 7 + 안전망 7종</div>
+      <div class="qcard q">왜 매칭은 BRN 1차 + 이름 2차인가?</div>
+      <div class="qcard d">Master Tier 5 view survivorship</div>
+      <div class="qcard q">왜 파일 정본을 master.documents로?</div>
+      <div class="qcard d">73명 권한 4단계 검사</div>
+      <div class="qcard q">왜 KODATA 어휘를 추상화했나?</div>
+      <div class="qcard d">멘토 풀 person_ext 패턴</div>
+      <div class="qcard d">투자정보 권한별 마스킹 view</div>
+      <div class="qcard q">왜 별도 백엔드 API 서버를 쓰지 않는가?</div>
+      <div class="qcard d">build-once-deploy-many 배포</div>
+      <div class="qcard q">왜 Python을 메인 스택으로 쓰지 않는가?</div>
+      <div class="qcard q">왜 pnpm + Turborepo인가?</div>
+      <div class="qcard d">자정 자동 재매칭 cron</div>
+      <div class="qcard q">왜 임베딩 검색에 pgvector?</div>
+      <div class="qcard d">press·뉴스 매일 자동 sync</div>
+      <div class="qcard q">왜 외부 API는 key 인증만?</div>
+      <div class="qcard d">silent skip 3중 안전망</div>
+      <div class="qcard q">왜 Vitest + Playwright로 테스트?</div>
+      <div class="qcard d">매칭 검수 큐 fail-closed</div>
+      <div class="qcard q">왜 Recharts로 차트를 직접 구현?</div>
+      <div class="qcard d">migration drift 차단</div>
+      <div class="qcard q">왜 GitHub Actions + WIF인가?</div>
+      <div class="qcard d">외부 source landing zone 영구 보존</div>
+      <div class="qcard q">왜 transaction-mode 풀링인가?</div>
+      <div class="qcard d">entity_sources가 MDM 뼈대</div>
+      <div class="qcard q">왜 파일은 GCS + signed URL인가?</div>
+      <div class="qcard d">survivorship rules 12 source</div>
+      <div class="qcard d">audit append-only (SECURITY DEFINER)</div>
+      <div class="qcard d">org_type / family_status 축 분리</div>
+      <div class="qcard q">왜 Secret Manager를 쓰나?</div>
+      <div class="qcard d">회사 360 = materialized projection</div>
+      <div class="qcard d">인물 360 = view projection</div>
+      <div class="qcard d">KiiPS 세션 수집 파이프라인</div>
+      <div class="qcard d">혁신의숲 modifiedDate cursor</div>
+      <div class="qcard d">dcamp-api 외부 read-only gateway</div>
+      <div class="qcard d">cold start 대비 min-instance 상시</div>
+      <div class="qcard d">CI에서 migration prefix 중복 차단</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S9 현업 매트릭스 + 부서 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>현업이 제작, <span class="hl">통합DB가 뒷받침</span></h2>
+  <div class="body-wrap">
+    <div class="s9wrap">
+      <div class="matrix">
+        <div class="mhead"><div></div><div>IT팀이 만든다</div><div>현업이 만든다</div></div>
+        <div class="mrow">
+          <div class="maxis" data-anim>완료·운영</div>
+          <div class="mcell" data-anim><h5>전문자문 · 오피스아워</h5><p>배포 완료 — 신청 관리용 시트 소멸</p></div>
+          <div class="mcell hot" data-anim><h5>투자팀 AI 심사역</h5><p>현업 코드 → 전사 자원 이관 · 운영 중</p></div>
+        </div>
+        <div class="mrow">
+          <div class="maxis" data-anim>진행·지원</div>
+          <div class="mcell" data-anim><h5>통합DB · 360 화면</h5><p>실데이터 프로토타입 + 즉각 피드백</p></div>
+          <div class="mcell hot" data-anim><h5>사업실 AI 멘토 · 경영본부 재무 대시보드</h5><p>현업 제작을 도구·연동·배포로 지원</p></div>
+        </div>
+      </div>
+      <div class="deptchips">
+        <div class="dchip" data-anim><div class="di">💰</div><div class="dn">펀드</div><div class="da">자펀드 1,248 통합</div></div>
+        <div class="dchip" data-anim><div class="di">🎯</div><div class="dn">투자</div><div class="da">모집→직접투자 한 흐름</div></div>
+        <div class="dchip" data-anim><div class="di">🌱</div><div class="dn">그로스</div><div class="da">코칭·정산·성과</div></div>
+        <div class="dchip" data-anim><div class="di">🌏</div><div class="dn">글로벌</div><div class="da">다국어·협업 페이지</div></div>
+        <div class="dchip" data-anim><div class="di">📰</div><div class="dn">홍보</div><div class="da">기사 자동수집</div></div>
+        <div class="dchip" data-anim><div class="di">🧑‍🏫</div><div class="dn">리소스</div><div class="da">멘토 자동 매칭</div></div>
+        <div class="dchip" data-anim><div class="di">🏢</div><div class="dn">스페이스</div><div class="da">입주↔회사 일체</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S9b AI 협업 방식 + 잡아낸 것 (8→11 앞으로 이동) ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>AI를 팀원처럼 — <span class="hl">끝까지 따지고, 스스로 잡아냈다</span></h2>
+  <div class="body-wrap" style="flex-direction:column;gap:3vh">
+    <div class="aistrip" data-anim>
+      <div class="astep"><div class="ei">🧭</div><div class="et">의도·도메인</div></div>
+      <div class="aarrow"><div class="ad" style="animation-delay:0s"></div></div>
+      <div class="astep"><div class="ei">💬</div><div class="et">AI 문답 구체화</div></div>
+      <div class="aarrow"><div class="ad" style="animation-delay:.5s"></div></div>
+      <div class="astep"><div class="ei">🔍</div><div class="et">AI 교차검증</div></div>
+      <div class="aarrow"><div class="ad" style="animation-delay:1s"></div></div>
+      <div class="astep"><div class="ei">⚙️</div><div class="et">자동 테스트</div></div>
+      <div class="aarrow"><div class="ad" style="animation-delay:1.5s"></div></div>
+      <div class="astep"><div class="ei">🛡️</div><div class="et">자동 안전망</div></div>
+      <div class="aarrow"><div class="ad" style="animation-delay:2s"></div></div>
+      <div class="astep hot"><div class="ei">✨</div><div class="et">성과</div></div>
+    </div>
+    <div class="aimetrics" data-anim>
+      <div class="aimetric">결정 기록 <b>90건</b></div>
+      <div class="aimetric">자동 테스트 <b>250건+</b></div>
+      <div class="aimetric">자동 수집 <b>10여 곳</b></div>
+      <div class="aimetric">자동 안전망 <b>24h</b></div>
+      <div class="aimetric">작업 <b>4~5주</b>로 압축</div>
+    </div>
+    <div class="epic-cap" data-anim>그리고 AI는 — 사람도 놓친 것까지 스스로 잡아냈다</div>
+    <div class="epics">
+      <div class="epic" data-anim><div class="epic-top"><span class="ic">🔍</span><span class="big">16곳</span></div><div class="epic-find">외주 개발사가 직접투자를 ‘펀드’로 잘못 분류</div><div class="epic-arrow">↓ AI 교차검증</div><div class="epic-fix">‘직접투자’로 정정 · 관련 <b>16곳 일괄 수정</b></div></div>
+      <div class="epic" data-anim><div class="epic-top"><span class="ic">🛡️</span><span class="big">29건</span></div><div class="epic-find">매칭 실패 데이터가 흔적 없이 누락될 위험</div><div class="epic-arrow">↓ 자동 안전망 3중</div><div class="epic-fix">사람도 몰랐던 <b>누락 29건 자가 탐지</b></div></div>
+      <div class="epic" data-anim><div class="epic-top"><span class="ic">🧩</span><span class="big">53 / 2,745</span></div><div class="epic-find">디캠프 배치 지원이 2,745건 중 53건만 표시</div><div class="epic-arrow">↓ 4겹 원인 추적</div><div class="epic-fix">표시 오류 <b>전수 복구</b></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S10 로드맵 + 비전 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim><span class="hl">7월 31일 정식 오픈</span>, 그리고 그 너머</h2>
+  <div class="body-wrap">
+    <div class="s10wrap">
+      <div class="road" id="road">
+        <div class="fillbar" id="fillbar"></div>
+        <div class="mstone done" data-anim><div class="pin"></div><div class="ph">1단계 SSOT 완성</div><div class="dt">✅ 완료 · 5월</div><div class="ds">데이터 수집 + SSOT 구축</div></div>
+        <div class="mstone now" data-anim><div class="pin"></div><div class="ph">2단계 마무리</div><div class="dt">🟡 6월 초</div><div class="ds">SSOT 다듬기 + 안전망</div></div>
+        <div class="mstone" data-anim><div class="pin"></div><div class="ph">3단계 부서 베타</div><div class="dt">🔵 6월 순차</div><div class="ds">펀드→투자·그로스→글로벌·홍보</div></div>
+        <div class="mstone goal" data-anim><div class="pin"></div><div class="flag">🚩</div><div class="ph">정식 오픈</div><div class="dt">🎯 7월 31일</div><div class="ds">5개 부서 daily · 73명 열람</div></div>
+      </div>
+      <div class="steps">
+        <div class="step here" data-anim><div class="sn">지금</div><h4>AI-centric</h4><p>부서별 AI 실험 · 일부 자동화</p><span class="badge">● 지금 여기</span></div>
+        <div class="arrowx" data-anim>➜</div>
+        <div class="step" data-anim><div class="sn">다음</div><h4>AI-driven</h4><p>AI가 전략·의사결정 직접 뒷받침</p></div>
+        <div class="arrowx" data-anim>➜</div>
+        <div class="step" data-anim><div class="sn">지향</div><h4>자기주도 AX</h4><p>구성원이 통합DB로 자기 업무 시스템 제작</p></div>
+      </div>
+      <div class="premise" data-anim>세 단계 공통 전제 : <b>한 곳에 정제된 데이터 = 통합DB</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== S11 클로징 ===== -->
+<section class="slide">
+  <h2 class="headline" data-anim>시스템 아닌, <span class="hl">일하는 방식의 전환</span></h2>
+  <div class="body-wrap">
+    <div class="close">
+      <div class="ba">
+        <div class="box before" data-anim="left"><div class="cap">BEFORE</div>한 회사에 7개 창</div>
+        <div class="arr" data-anim>➜</div>
+        <div class="box after" data-anim="right"><div class="cap">AFTER</div>클릭 한 번에 360도</div>
+      </div>
+      <div class="line" data-anim>“접점에서 일하고, 근간에 쌓이고, <span class="hl">지능으로 환원.</span>”</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /stage -->
+
+<div class="dots" id="dots"></div>
+<div class="pager" id="pager">01 / 13</div>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> 이동 · <kbd>F</kbd> 전체화면</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+/* ---------- RELMAP (S3) ---------- */
+(function(){
+  const nodesG=document.getElementById('relNodes'),edgesG=document.getElementById('relEdges'),dotsG=document.getElementById('relDots');
+  const ext=[["KODATA","기업 기본정보·재무"],["혁신의숲","시장·투자정보"],["KiiPS-GP","직접투자"],["KiiPS-LP","출자펀드"]];
+  const intl=[["사업실·배치 시트",""],["임직원 명부 xlsx",""],["입주관리",""],["BD 자문 supabase",""],["그로스코칭 supabase",""],["그로스 노션",""]];
+  const srcY=54,srcH=58,srcW=126,extX0=24,intX0=628,gap=8,src=[];
+  ext.forEach((s,i)=>src.push({x:extX0+i*(srcW+gap),label:s[0],sub:s[1],kind:'ext'}));
+  intl.forEach((s,i)=>src.push({x:intX0+i*(95+6),w:95,label:s[0],sub:s[1],kind:'int'}));
+  src.forEach(s=>{const w=s.w||srcW;s.cx=s.x+w/2;s.by=srcY+srcH;
+    const g=el('g',{class:'nbox'},nodesG);
+    el('rect',{x:s.x,y:srcY,width:w,height:srcH,rx:10,fill:s.kind==='ext'?'rgba(138,106,207,.16)':'rgba(90,207,143,.14)',stroke:s.kind==='ext'?'#8a6acf':'#5acf8f','stroke-width':1.5},g);
+    el('text',{x:s.cx,y:srcY+(s.sub?24:34),'font-size':s.w?12:13.5,'font-weight':700,'text-anchor':'middle'},g).textContent=s.label;
+    if(s.sub)el('text',{x:s.cx,y:srcY+42,'font-size':11,fill:'#9fb0cc','text-anchor':'middle'},g).textContent=s.sub;});
+  const cores=[["🏢 기업","906개",300],["👤 인물","임직원 73 + 멘토 381",510],["🔗 관계","387 패밀리사",720],["📌 출처 기록","3,914건+",930]];
+  const coreY=458,coreW=170,coreH=104,coreMid=[];
+  cores.forEach(c=>{const x=c[2],cx=x+coreW/2;coreMid.push({cx,ty:coreY});
+    const g=el('g',{class:'nbox'},nodesG);
+    el('path',{d:`M${x},${coreY+14} a${coreW/2},14 0 0,1 ${coreW},0 v${coreH-28} a${coreW/2},14 0 0,1 ${-coreW},0 Z`,fill:'rgba(79,156,249,.18)',stroke:'#5a8fcf','stroke-width':2},g);
+    el('ellipse',{cx,cy:coreY+14,rx:coreW/2,ry:14,fill:'rgba(79,156,249,.3)',stroke:'#5a8fcf','stroke-width':2},g);
+    el('text',{x:cx,y:coreY+54,'font-size':15,'font-weight':800,'text-anchor':'middle'},g).textContent=c[0];
+    el('text',{x:cx,y:coreY+76,'font-size':12,fill:'#bfe0ff','text-anchor':'middle'},g).textContent=c[1];});
+  const M={0:[0],1:[0],2:[2],3:[2],4:[0],5:[1],6:[2],7:[0],8:[0,1],9:[2]};let di=0;
+  src.forEach((s,i)=>{(M[i]||[]).forEach(ci=>{const c=coreMid[ci],my=(s.by+c.ty)/2;
+    const d=`M${s.cx},${s.by} C${s.cx},${my} ${c.cx},${my} ${c.cx},${c.ty}`,id='rp'+(di++);
+    el('path',{class:'edge',d,id,'pathLength':1,stroke:s.kind==='ext'?'url(#edgeG)':'url(#edgeGin)','opacity':.7},edgesG);
+    const dot=el('circle',{class:'flowdot',r:4.5,fill:'#38e1d6'},dotsG);
+    const am=el('animateMotion',{dur:(2.2+(i%3)*0.4)+'s',repeatCount:'indefinite'},dot);el('mpath',{href:'#'+id},am);});});
+})();
+
+/* ---------- INNERMAP (S5) — 시스템 아키텍처 한눈에 (소스→랜딩→master→화면) ---------- */
+(function(){
+  const NG=document.getElementById('innerNodes'),EG=document.getElementById('innerEdges'),DG=document.getElementById('innerDots');
+  if(!NG)return;
+  const C={ext:'#8a6acf',int:'#5acf8f',notion:'#a06acf',land:'#cfa55a',master:'#5a8fcf',read:'#cf8a4a',ui:'#cf5acf',future:'#6a6a8a'};
+  const BG={ext:'#241d33',int:'#15281f',notion:'#241d35',land:'#2a2514',master:'#15294c',read:'#2a2110',ui:'#2c1429',future:'#171720'};
+  const groups=[[24,48,720,184,'📥 외부 SaaS — 카테고리 B','#8a6acf'],[766,48,344,278,'🏢 디캠프 자체 시스템 — A','#5acf8f'],[1130,48,346,184,'📝 노션 — D','#a06acf']];
+  groups.forEach(g=>{const G=el('g',{class:'nbox'},NG);
+    el('rect',{x:g[0],y:g[1],width:g[2],height:g[3],rx:15,fill:'rgba(255,255,255,.02)',stroke:g[4],'stroke-width':1.2,'stroke-dasharray':'6 5','opacity':.5},G);
+    el('text',{x:g[0]+16,y:g[1]+25,'font-size':14,'font-weight':800,fill:g[4]},G).textContent=g[3];});
+  const N={
+    kgp:{x:42,y:106,w:164,h:74,col:'ext',t:'KiiPS-GP',s:['직접투자 (GP)','6,128 row · 16 raw']},
+    klp:{x:222,y:106,w:164,h:74,col:'ext',t:'KiiPS-LP',s:['출자펀드 (LP)','2,823 row · W4-1']},
+    kod:{x:402,y:106,w:164,h:74,col:'ext',t:'KODATA',s:['기업 기본정보·재무','sandbox E2E · 계약중']},
+    inn:{x:582,y:106,w:150,h:74,col:'ext',t:'혁신의숲',s:['트래픽·매출·재무','9 raw · worker']},
+    bi:{x:782,y:104,w:152,h:58,col:'int',t:'batchIntelli',s:['배치 분석']},
+    fc:{x:944,y:104,w:152,h:58,col:'int',t:'fund-connect',s:['운용사·패밀리']},
+    bd:{x:782,y:174,w:152,h:58,col:'int',t:'bd',s:['BD 자문']},
+    oh:{x:944,y:174,w:152,h:58,col:'int',t:'officehour',s:['오피스아워']},
+    gc:{x:782,y:244,w:152,h:58,col:'int',t:'growthcoaching',s:['그로스 코칭']},
+    sm:{x:944,y:244,w:152,h:58,col:'int',t:'space-mgmt',s:['공간·입주']},
+    gn:{x:1146,y:106,w:152,h:74,col:'notion',t:'그로스 노션',s:['schema only','W3 적재 예정'],dash:1},
+    cal:{x:1314,y:106,w:152,h:74,col:'notion',t:'callabo-notion',s:['회의록 NLP','Phase 2+'],dash:1},
+    stg:{x:150,y:392,w:264,h:80,col:'land',t:'direct_investment staging',s:['7 staging + 6 refresh fn (BRN)']},
+    land:{x:470,y:384,w:520,h:98,col:'land',t:'external_* 랜딩 — raw 영구 보관',s:['kiips_gp·lp · kodata · innoforest','supabase_space · growth_notion']},
+    mc:{x:556,y:540,w:360,h:90,col:'master',t:'master 영역 — 통합DB 핵심',s:['companies + persons + company_relationship','+ entity_sources + application + 매칭 큐']},
+    mh:{x:556,y:638,w:360,h:44,col:'master',t:'',s:['*_history shadow · 변경 이력 자동 누적']},
+    ma:{x:556,y:690,w:360,h:44,col:'master',t:'',s:['audit_log + outbox + person_access_log']},
+    read:{x:980,y:566,w:300,h:90,col:'read',t:'integrated.* 조회용',s:['company_read_model','fund_portfolio · 360 뷰 데이터']},
+    ui:{x:556,y:790,w:360,h:64,col:'ui',t:'사용자 화면 — 1단계',s:['360 뷰 + 검색 · 회사 11 / 인물 8 섹션']},
+    form:{x:60,y:548,w:224,h:58,col:'future',t:'통합DB 폼',s:['3단계 dcamp.kr 인입'],dash:1},
+    ai:{x:60,y:642,w:224,h:58,col:'future',t:'AI / ML layer',s:['임베딩·온톨로지·LLM'],dash:1},
+    eu:{x:60,y:736,w:244,h:58,col:'future',t:'외부 사용자 6종',s:['family·vc·mentor·judge'],dash:1}
+  };
+  let ei=0;
+  function E(a,b,label,dash){const A=N[a],B2=N[b];
+    const ax=A.x+A.w/2,ay=A.y+A.h/2,bx=B2.x+B2.w/2,by=B2.y+B2.h/2;
+    const horiz=Math.abs(bx-ax)>Math.abs(by-ay)+30;
+    const d=horiz?`M${ax},${ay} C${(ax+bx)/2},${ay} ${(ax+bx)/2},${by} ${bx},${by}`:`M${ax},${ay} C${ax},${(ay+by)/2} ${bx},${(ay+by)/2} ${bx},${by}`;
+    const id='ie'+(ei++);
+    const p=el('path',{class:dash?'edge dashed':'edge',id,d,pathLength:1,stroke:dash?'#7a7a9a':'#5a8fcf','stroke-width':dash?1.4:1.8,'opacity':.5},EG);
+    if(dash)p.style.strokeDasharray='6 5';
+    if(label)el('text',{x:(ax+bx)/2,y:(ay+by)/2-6,'font-size':10.5,fill:'#9fb0cc','font-weight':700,'text-anchor':'middle'},EG).textContent=label;
+    {const dt=el('circle',{class:'flowdot',r:dash?3.5:4,fill:dash?'#9aa6c0':'#38e1d6'},DG);const am=el('animateMotion',{dur:(2.3+(ei%3)*0.35+(dash?1.1:0))+'s',repeatCount:'indefinite'},dt);el('mpath',{href:'#'+id},am);}}
+  // 실선 (코드에 박힌 흐름)
+  E('kgp','land','월 1회 ingest');E('klp','land');E('kod','land','자동 ELT');E('inn','land');
+  E('sm','land','시스템 ELT');
+  E('land','stg');E('stg','mc','refresh fn');E('land','mc','정제·dedup·ER');
+  E('mc','read','outbox 재계산');E('read','ui');
+  // 점선 (Phase 2+ / schema only)
+  E('gn','land','W3 적재',1);E('fc','mc','동기 INSERT',1);E('cal','mc','승인 큐',1);
+  E('form','mc','3단계 INSERT',1);E('mc','ai','Phase 2+',1);E('eu','ui','RBAC',1);
+  // 관계 보강 — 자체 시스템·소스 다중 연결 (그물망)
+  E('bi','land');E('fc','land');E('bd','land');E('oh','land');E('gc','land');
+  E('kgp','stg');E('klp','stg');E('kod','stg');
+  E('mc','mh');E('mc','ma');E('mh','read');
+  E('kod','mc',null,1);E('inn','mc',null,1);E('bi','mc',null,1);E('cal','land',null,1);E('sm','mc',null,1);
+  // 노드 그리기
+  for(const k in N){const n=N[k],g=el('g',{class:'nbox'},NG),cx=n.x+n.w/2;
+    const r=el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:11,fill:BG[n.col],stroke:C[n.col],'stroke-width':n.col==='master'?2.4:1.8},g);
+    if(n.dash)r.style.strokeDasharray='6 5';
+    let yy=n.t?n.y+22:n.y+n.h/2+4;
+    if(n.t){el('text',{x:cx,y:yy,'font-size':(n.col==='master'||n.col==='land'||n.col==='read'||n.col==='ui')?13:12.5,'font-weight':800,fill:'#eaf0fb','text-anchor':'middle'},g).textContent=n.t;yy+=17;}
+    (n.s||[]).forEach(line=>{el('text',{x:cx,y:yy,'font-size':9.8,fill:'#9fb0cc','text-anchor':'middle'},g).textContent=line;yy+=14;});}
+})();
+
+/* ---------- AI LOOP (S6) ---------- */
+(function(){
+  const nodesG=document.getElementById('loopNodes'),edgesG=document.getElementById('loopEdges'),dotsG=document.getElementById('loopDots');
+  if(!nodesG)return;
+  const cx=380,cy=280,R=196,nw=152,nh=64;
+  const nodes=[
+    {ic:'🧭',t1:'의도 · 도메인',t2:'사람이 묻는다'},
+    {ic:'💬',t1:'AI 문답 구체화',t2:'방대한 설계 도출'},
+    {ic:'📝',t1:'결정 기록',t2:'ADR 90건'},
+    {ic:'🔍',t1:'AI 교차검증',t2:'Codex 세컨드오피니언'},
+    {ic:'⚙️',t1:'구현 · 자동 테스트',t2:'250건+'},
+    {ic:'🛡️',t1:'자동 안전망',t2:'24시간 가동'}
+  ];
+  const pos=nodes.map((_,i)=>{const a=(i*60-90)*Math.PI/180;return {x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)};});
+  // edges behind (clockwise), trimmed so node boxes overlap-hide the middle
+  pos.forEach((p,i)=>{const q=pos[(i+1)%6];const id='lp'+i;
+    el('path',{class:'edge',d:`M${p.x},${p.y} L${q.x},${q.y}`,id,pathLength:1,stroke:'#5a8fcf','stroke-width':2,'opacity':.6},edgesG);
+    const dot=el('circle',{class:'flowdot',r:5,fill:'#38e1d6'},dotsG);
+    const am=el('animateMotion',{dur:'2.4s',repeatCount:'indefinite',begin:(i*0.25)+'s'},dot);el('mpath',{href:'#'+id},am);});
+  // center
+  const cg=el('g',{class:'nbox'},nodesG);
+  el('circle',{cx,cy,r:70,fill:'rgba(56,225,214,.12)',stroke:'rgba(56,225,214,.5)','stroke-width':2},cg);
+  el('text',{x:cx,y:cy-6,'font-size':21,'font-weight':900,'text-anchor':'middle',fill:'#bfe0ff'},cg).textContent='AI × 사람';
+  el('text',{x:cx,y:cy+18,'font-size':13,'text-anchor':'middle',fill:'#9fb0cc'},cg).textContent='반복 협업';
+  // nodes on top
+  pos.forEach((p,i)=>{const n=nodes[i];const g=el('g',{class:'nbox'},nodesG);
+    el('rect',{x:p.x-nw/2,y:p.y-nh/2,width:nw,height:nh,rx:13,fill:'rgba(79,156,249,.16)',stroke:'#5a8fcf','stroke-width':1.8},g);
+    el('text',{x:p.x,y:p.y-12,'font-size':17,'text-anchor':'middle'},g).textContent=n.ic;
+    el('text',{x:p.x,y:p.y+8,'font-size':13.5,'font-weight':800,'text-anchor':'middle'},g).textContent=n.t1;
+    el('text',{x:p.x,y:p.y+25,'font-size':11.5,'text-anchor':'middle',fill:'#bfe0ff'},g).textContent=n.t2;});
+})();
+
+/* ---------- DATA FLOW (S4) ---------- */
+(function(){
+  const E=document.getElementById('flowEdges'),N=document.getElementById('flowNodes'),D=document.getElementById('flowDots');
+  const COL={ext:['rgba(138,106,207,.16)','#8a6acf'],raw:['rgba(207,165,90,.15)','#cfa55a'],mas:['rgba(79,156,249,.16)','#5a8fcf'],rm:['rgba(207,138,74,.16)','#cf8a4a'],ui:['rgba(207,90,207,.14)','#cf5acf'],q:['rgba(180,70,55,.25)','#cf6a5a']};
+  function hdr(x,t,c){el('text',{x,y:34,'font-size':16,'font-weight':800,fill:c,'text-anchor':'middle',class:'nbox'},N).textContent=t;}
+  function box(x,cy,w,h,title,code,col){const g=el('g',{class:'nbox'},N),cx=x+w/2;
+    el('rect',{x,y:cy-h/2,width:w,height:h,rx:9,fill:col[0],stroke:col[1],'stroke-width':1.6},g);
+    if(code){el('text',{x:cx,y:cy-3,'font-size':13,'font-weight':800,fill:'#eaf0fb','text-anchor':'middle'},g).textContent=title;
+      el('text',{x:cx,y:cy+15,'font-size':11,fill:'#9fb0cc','text-anchor':'middle'},g).textContent=code;}
+    else el('text',{x:cx,y:cy+5,'font-size':12.5,'font-weight':600,fill:'#eaf0fb','text-anchor':'middle'},g).textContent=title;
+    return {l:x,r:x+w,cy,cx};}
+  function edge(d,opt){opt=opt||{};const id='fe'+(edge._i=(edge._i||0)+1);
+    const p=el('path',{class:opt.dash?'edge dashed':'edge',d,id,pathLength:1,stroke:opt.dash?'#cf8a6a':'#6f86b5','stroke-width':1.6,'opacity':opt.dash?.6:.5},E);
+    if(opt.dash)p.style.strokeDasharray='5 5';
+    if(opt.label)el('text',{x:opt.lx,y:opt.ly,'font-size':12,fill:'#9fb0cc','font-weight':700,'text-anchor':'middle'},E).textContent=opt.label;
+    {const dot=el('circle',{class:'flowdot',r:opt.dash?3.5:4.5,fill:opt.dash?'#cf8a6a':'#38e1d6'},D);
+      const am=el('animateMotion',{dur:(2+(id.length%3)*0.4+(opt.dash?1.1:0))+'s',repeatCount:'indefinite',begin:(edge._i*0.12)+'s'},dot);el('mpath',{href:'#'+id},am);}}
+  hdr(88,'① 외부 출처',COL.ext[1]);hdr(382,'② 원본 보관',COL.raw[1]);hdr(722,'③ 통합 SSOT','#bfe0ff');hdr(1193,'④ 화면 데이터',COL.rm[1]);hdr(1405,'⑤ 사용자 화면',COL.ui[1]);
+  const ys=[88,178,268,358,448,538,628];
+  const ext=['KODATA','혁신의숲','KiiPS-GP/LP','그로스 노션','BD·GC supabase','입주관리','내부 시트'];
+  const raw=['external_kodata','external_innoforest','external_kiips_gp/lp','external_growth_notion','external_bd / external_gc','external_supabase_space','external_dcamp_sheet'];
+  const eP=[],rP=[];
+  ys.forEach((y,i)=>{eP.push(box(24,y,128,42,ext[i],null,COL.ext));rP.push(box(276,y,212,42,raw[i],null,COL.raw));});
+  // master
+  const org=box(624,180,196,52,'기업','master.organization',COL.mas);
+  const per=box(624,350,196,52,'인물','master.persons',COL.mas);
+  const src=box(624,470,196,52,'출처 기록','master.entity_sources',COL.mas);
+  const rel=box(624,590,196,52,'관계','master.company_relationship',COL.mas);
+  // queue cylinder
+  (function(){const cx=970,cy=590,rx=66,ry=12,ch=92;const g=el('g',{class:'nbox'},N);
+    el('path',{d:`M${cx-rx},${cy-ch/2+ry} a${rx},${ry} 0 0,1 ${2*rx},0 v${ch-2*ry} a${rx},${ry} 0 0,1 ${-2*rx},0 Z`,fill:COL.q[0],stroke:COL.q[1],'stroke-width':1.6},g);
+    el('ellipse',{cx,cy:cy-ch/2+ry,rx,ry,fill:'rgba(180,70,55,.4)',stroke:COL.q[1],'stroke-width':1.6},g);
+    el('text',{x:cx,y:cy,'font-size':12.5,'font-weight':800,fill:'#eaf0fb','text-anchor':'middle'},g).textContent='매칭 검수 큐';
+    el('text',{x:cx,y:cy+18,'font-size':10.5,fill:'#f0c0b0','text-anchor':'middle'},g).textContent='자동 실패 → 사람 검수';})();
+  const rm=box(1086,204,214,72,'company_read_model','fund_portfolio_read_model',COL.rm);
+  const u1=box(1330,150,150,46,'회사 360 / 인물 360',null,COL.ui);
+  const u2=box(1330,300,150,46,'검색·목록·필터',null,COL.ui);
+  const u3=box(1330,600,150,54,'매칭 큐 검수','진척 대시보드',COL.ui);
+  // edges: ext->raw
+  ys.forEach(y=>edge(`M152,${y} C214,${y} 214,${y} 276,${y}`));
+  // raw->master
+  const map=[[org],[org],[rel],[rel],[org,per],[rel],[org]];
+  ys.forEach((y,i)=>map[i].forEach(m=>edge(`M488,${y} C556,${y} 556,${m.cy} 624,${m.cy}`)));
+  // master->rm
+  [org,per,src,rel].forEach(m=>edge(`M820,${m.cy} C953,${m.cy} 953,204 1086,204`));
+  // rm->ui
+  edge(`M1300,204 C1315,204 1315,150 1330,150`);
+  edge(`M1300,204 C1315,204 1315,300 1330,300`);
+  // rel->u3
+  edge(`M820,590 C1075,590 1075,600 1330,600`);
+  // queue dashed branches
+  edge(`M820,575 C862,575 868,560 904,560`,{dash:true,label:'자동 실패',lx:862,ly:546});
+  edge(`M904,620 C868,620 862,605 820,605`,{dash:true,label:'사람 검수',lx:862,ly:640});
+})();
+
+/* ---------- SSOT → 360 BRIDGE (S6) ---------- */
+(function(){
+  const EE=document.getElementById('bridgeEdges'),NB=document.getElementById('bridgeNodes'),DD=document.getElementById('bridgeDots');
+  // left: SSOT
+  const ssot=[['기업','master.organization',200],['인물','master.persons',380],['관계','master.company_relationship',560],['출처 기록','master.entity_sources',715]];
+  ssot.forEach(s=>{const x=40,w=240,h=62,y=s[2],g=el('g',{class:'nbox'},NB);
+    el('rect',{x,y:y-h/2,width:w,height:h,rx:12,fill:'rgba(79,156,249,.16)',stroke:'#5a8fcf','stroke-width':1.8},g);
+    el('text',{x:x+w/2,y:y-5,'font-size':15,'font-weight':800,fill:'#eaf0fb','text-anchor':'middle'},g).textContent=s[0];
+    el('text',{x:x+w/2,y:y+15,'font-size':12,fill:'#9fb0cc','text-anchor':'middle'},g).textContent=s[1];});
+  // right header
+  (function(){const x=560,y=44,w=880,h=84,g=el('g',{class:'nbox'},NB),cy=y+h/2;
+    el('rect',{x,y,width:w,height:h,rx:14,fill:'rgba(79,156,249,.1)',stroke:'#5a8fcf','stroke-width':1.6},g);
+    el('rect',{x:x+18,y:cy-26,width:52,height:52,rx:12,fill:'#38e1d6'},g);
+    el('text',{x:x+44,y:cy+7,'font-size':20,'font-weight':900,fill:'#04122b','text-anchor':'middle'},g).textContent='RT';
+    el('text',{x:x+88,y:cy-4,'font-size':19,'font-weight':800,fill:'#eaf0fb'},g).textContent='㈜루트릭스  RootRix';
+    el('text',{x:x+88,y:cy+22,'font-size':12.5,fill:'#9fb0cc'},g).textContent='사업자번호 123-45-67890 · 설립 2018-11 · 대표 홍길동 · SaaS / 운영 자동화';
+    el('rect',{x:x+w-72,y:cy-22,width:54,height:30,rx:7,fill:'rgba(79,156,249,.22)',stroke:'#4f9cf9'},g);
+    el('text',{x:x+w-45,y:cy-1,'font-size':15,'font-weight':800,fill:'#bfe0ff','text-anchor':'middle'},g).textContent='B1';})();
+  // right sections (vertical)
+  const secs=[
+    ['📈','경영규모','KODATA','#34d399','매출·영업이익·순이익 10년 차트'],
+    ['💰','직접투자','KiiPS-GP','#4f9cf9','Pre-A·보유 · Pre-money 149.99억 · 지분 1.54%'],
+    ['🏢','입주 이력','입주관리','#cf8a4a','마포 1F · 2024-06~진행 · 3석'],
+    ['🎯','배치 참여','시트+노션','#fbbf24','배치 5기 졸업 · 달성 86% · 12→18명'],
+    ['💰','자펀드 매칭','KiiPS-LP','#4f9cf9','디캠프 1호 펀드 · Pre-A 5억'],
+    ['🌏','글로벌 Tier','글로벌','#34d399','Tier 1 · 해외 IR · GFP'],
+    ['💬','회의록','그로스 노션','#a78bfa','12건 (배치 7·멘토 3·투자 2)'],
+    ['🎓','프로그램','BD·GC·OH','#38e1d6','BD 3회 · GC 2멘토 · OH 4회'],
+    ['👥','인물','persons','#fb7185','대표 홍길동 · 매칭 멘토 임승찬']
+  ];
+  const secY=i=>188+i*65;
+  secs.forEach((s,i)=>{const x=560,w=880,h=56,y=secY(i),g=el('g',{class:'nbox'},NB);
+    el('rect',{x,y:y-h/2,width:w,height:h,rx:10,fill:'rgba(255,255,255,.045)',stroke:'rgba(255,255,255,.1)'},g);
+    el('rect',{x,y:y-h/2,width:5,height:h,rx:2,fill:s[3]},g);
+    el('text',{x:x+26,y:y+3,'font-size':18},g).textContent=s[0];
+    el('text',{x:x+50,y:y-6,'font-size':14.5,'font-weight':800,fill:'#eaf0fb'},g).textContent=s[1];
+    const bw=s[2].length*7.5+16, bx=x+52+s[1].length*16+12;
+    el('rect',{x:bx,y:y-19,width:bw,height:20,rx:5,fill:s[3]+'22',stroke:s[3],'stroke-width':1},g);
+    el('text',{x:bx+bw/2,y:y-5,'font-size':11,'font-weight':700,fill:s[3],'text-anchor':'middle'},g).textContent=s[2];
+    el('text',{x:x+50,y:y+16,'font-size':12.5,fill:'#9fb0cc'},g).textContent=s[4];});
+  // edges: [ssotY, target]  target: 'H' header or section index
+  const edges=[[200,'H'],[200,0],[715,0],[560,1],[560,2],[560,3],[560,4],[560,5],[380,6],[380,7],[380,8]];
+  edges.forEach((e,i)=>{const sy=e[0],ey=e[1]==='H'?86:secY(e[1]),id='br'+i;
+    el('path',{class:'edge',d:`M280,${sy} C420,${sy} 420,${ey} 560,${ey}`,id,pathLength:1,stroke:'#6f86b5','stroke-width':1.8,'opacity':.5},EE);
+    const dot=el('circle',{class:'flowdot',r:5,fill:'#38e1d6'},DD);
+    const am=el('animateMotion',{dur:(2.2+(i%4)*0.3)+'s',repeatCount:'indefinite',begin:(i*0.16)+'s'},dot);el('mpath',{href:'#'+id},am);});
+})();
+
+/* ---------- J-CURVE (경과 슬라이드) ---------- */
+(function(){
+  const G=document.getElementById('jcEls');if(!G)return;
+  el('line',{x1:54,y1:44,x2:54,y2:334,stroke:'rgba(255,255,255,.18)','stroke-width':1.5},G);
+  el('line',{x1:54,y1:334,x2:602,y2:334,stroke:'rgba(255,255,255,.18)','stroke-width':1.5},G);
+  el('text',{x:26,y:190,'font-size':12.5,fill:'#9fb0cc','font-weight':700,'text-anchor':'middle',transform:'rotate(-90 26 190)'},G).textContent='성과 · 구체화';
+  el('text',{x:598,y:356,'font-size':11.5,fill:'#8aa0c4','text-anchor':'end'},G).textContent='시간 →';
+  el('path',{class:'edge',id:'jc1',d:'M74,300 C172,288 272,262 422,238',pathLength:1,stroke:'#6a7a9a','stroke-width':2.5},G);
+  el('path',{class:'edge',id:'jc2',d:'M422,238 C486,214 524,136 584,46',pathLength:1,stroke:'#38e1d6','stroke-width':4.5},G);
+  [0,1,2].forEach(i=>{const d=el('circle',{class:'flowdot',r:5,fill:'#38e1d6'},G);const am=el('animateMotion',{dur:'2.2s',repeatCount:'indefinite',begin:(i*0.55)+'s'},d);el('mpath',{href:'#jc2'},am);});
+  const M=[[74,300,'ISP',0,1],[200,280,'IT전문가 자문',0,1],[340,254,'팩트시트',0,1],[422,238,'자체개발',1,1],[584,46,'지금',1,0]];
+  M.forEach(m=>{const g=el('g',{class:'nbox'},G);
+    if(m[3])el('circle',{cx:m[0],cy:m[1],r:14,fill:'none',stroke:'#38e1d6','stroke-width':1.5,opacity:.45},g);
+    el('circle',{cx:m[0],cy:m[1],r:m[3]?7:5,fill:m[3]?'#38e1d6':'#6a7a9a',stroke:'#0a0e24','stroke-width':2},g);
+    el('text',{x:m[0],y:m[4]?m[1]+22:m[1]-16,'font-size':12.5,'font-weight':m[3]?800:600,fill:m[3]?'#bff0ea':'#9fb0cc','text-anchor':'middle'},g).textContent=m[2];});
+})();
+
+/* ---------- nav + anim ---------- */
+const slides=[...document.querySelectorAll('.slide')];
+const dotsWrap=document.getElementById('dots'),pager=document.getElementById('pager'),progress=document.getElementById('progress');
+let cur=0,timers=[];
+slides.forEach((_,i)=>{const d=document.createElement('i');d.onclick=(e)=>{e.stopPropagation();go(i);};dotsWrap.appendChild(d);});
+const dots=[...dotsWrap.children];
+function clearTimers(){timers.forEach(t=>clearTimeout(t));timers=[];}
+function playAnims(slide){
+  [...slide.querySelectorAll('[data-anim]')].forEach((e,i)=>{e.classList.remove('show');timers.push(setTimeout(()=>e.classList.add('show'),110+i*110));});
+  const nboxes=[...slide.querySelectorAll('.diagram .nbox')];
+  nboxes.forEach((n,i)=>{n.classList.remove('on');timers.push(setTimeout(()=>n.classList.add('on'),120+i*18));});
+  const edgeStart=260+nboxes.length*18;
+  [...slide.querySelectorAll('.diagram path.edge')].forEach((p,i)=>{p.classList.remove('drawn');timers.push(setTimeout(()=>p.classList.add('drawn'),edgeStart+i*40));});
+  [...slide.querySelectorAll('.diagram .flowdot')].forEach((d,i)=>{d.classList.remove('on');timers.push(setTimeout(()=>d.classList.add('on'),edgeStart+600+i*25));});
+  [...slide.querySelectorAll('.qcard')].forEach((c,i)=>{c.classList.remove('show');timers.push(setTimeout(()=>c.classList.add('show'),300+i*45));});
+  slide.querySelectorAll('.counter').forEach(c=>{const to=+c.dataset.to,dur=1100,t0=performance.now();
+    function tick(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);c.textContent=Math.round(to*e).toLocaleString();if(p<1)requestAnimationFrame(tick);}
+    timers.push(setTimeout(()=>requestAnimationFrame(tick),500));});
+  const g=slide.querySelector('#gauge80');
+  if(g){g.style.setProperty('--p',0);timers.push(setTimeout(()=>{let v=0;const iv=setInterval(()=>{v+=2;g.style.setProperty('--p',v);if(v>=80)clearInterval(iv);},14);},600));}
+  slide.querySelectorAll('.fillbar').forEach(fb=>{fb.style.width=0;timers.push(setTimeout(()=>fb.style.width=(fb.dataset.w||'84')+'%',400));});
+  const tf=slide.querySelector('#tpfill');if(tf){tf.style.width=0;timers.push(setTimeout(()=>tf.style.width='98%',500));}
+}
+function go(n){
+  if(n<0||n>=slides.length)return;
+  clearTimers();slides[cur].classList.remove('active');cur=n;
+  const s=slides[cur];s.classList.add('active');playAnims(s);
+  dots.forEach((d,i)=>d.classList.toggle('on',i===cur));
+  pager.textContent=String(cur+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  progress.style.width=(cur/(slides.length-1)*100)+'%';
+  if((parseInt(location.hash.slice(1),10)||0)!==cur+1)history.replaceState(null,'','#'+(cur+1));
+}
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
+});
+document.getElementById('stage').addEventListener('click',e=>{const x=e.clientX,w=window.innerWidth;if(x<w*0.16)go(cur-1);else go(cur+1);});
+const fromHash=()=>{const h=parseInt(location.hash.slice(1),10);return(h>=1&&h<=slides.length)?h-1:0;};
+window.addEventListener('hashchange',()=>{const t=fromHash();if(t!==cur)go(t);});
+go(fromHash());
+</script>
+</body>
+</html>
