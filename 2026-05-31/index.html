@@ -277,7 +277,9 @@ body{
 .premise b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 
 /* ===== S10 AX 성숙도 매트릭스 ===== */
-.axm{display:grid;grid-template-columns:1.05fr 3fr 1.6fr 1.6fr;gap:.8vh .7vw;width:94%;margin:0 auto}
+.axm{position:relative;display:grid;grid-template-columns:1.05fr 3fr 1.6fr 1.6fr;gap:.8vh .7vw;width:94%;margin:8.5vh auto 0}
+.axm-callout{position:absolute;left:57%;top:-7vh;transform:translateX(-50%);white-space:nowrap;background:var(--grad);color:#04122b;font-weight:800;font-size:.98vw;padding:.6em 1.2em;border-radius:999px;box-shadow:0 0 42px -10px rgba(56,225,214,.65);z-index:5}
+.axm-callout .axm-pointer{position:absolute;top:100%;left:50%;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:11px solid #38e1d6}
 .axm-stages{display:flex;justify-content:space-around;align-items:center;color:var(--ink-faint);font-weight:700;font-size:.95vw}
 .axm-h{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05vw}
 .axm-h.ai{color:#38bdf8}
@@ -748,9 +750,10 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
 
 <!-- ===== S10 7월 31일 오픈 + AX 성숙도 매트릭스 ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim><span class="hl">7월 31일</span> 오픈 예정</h2>
+  <h2 class="headline" data-anim>6월말 베타 오픈 · <span class="hl">7월말 정식 오픈 예정</span></h2>
   <div class="body-wrap">
     <div class="axm">
+      <div class="axm-callout" data-anim>📍 통합DB 프로젝트 · <b>디캠프 AX 여정의 시작</b><span class="axm-pointer"></span></div>
       <div></div>
       <div class="axm-stages" data-anim><span>Intuition-driven</span><span>Data-centric</span><span>Data-driven</span></div>
       <div class="axm-h ai" data-anim>AI-centric</div>
