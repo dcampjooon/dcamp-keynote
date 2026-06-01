@@ -276,6 +276,19 @@ body{
 .premise{text-align:center;padding:1.4vh;border-radius:14px;background:var(--grad-soft);border:1px solid var(--line-strong);font-weight:800;font-size:1.1vw;width:74vw}
 .premise b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 
+/* ===== S10 AX 성숙도 매트릭스 ===== */
+.axm{display:grid;grid-template-columns:1.05fr 3fr 1.6fr 1.6fr;gap:.8vh .7vw;width:94%;margin:0 auto}
+.axm-stages{display:flex;justify-content:space-around;align-items:center;color:var(--ink-faint);font-weight:700;font-size:.95vw}
+.axm-h{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05vw}
+.axm-h.ai{color:#38bdf8}
+.axm-rl{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:1.0vw;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:1.4vh .4vw;color:#eaf0fb}
+.axm-band{position:relative;display:flex;align-items:center;justify-content:center;background:rgba(4,8,18,.7);border:1px solid var(--line);border-radius:9px;overflow:hidden;min-height:7.6vh}
+.axm-arrow{position:absolute;left:2%;top:50%;transform:translateY(-50%);width:94%;height:46%;background:linear-gradient(90deg,rgba(130,140,160,.22),rgba(56,189,248,.5));clip-path:polygon(0 30%,88% 30%,88% 6%,100% 50%,88% 94%,88% 70%,0 70%)}
+.axm-phrase{position:relative;z-index:2;font-weight:700;font-size:1.05vw;color:#eaf2ff;text-align:center;padding:0 1vw}
+.axm-cell{display:flex;align-items:center;justify-content:center;text-align:center;border-radius:9px;font-size:.82vw;font-weight:600;line-height:1.4;padding:1vh .7vw}
+.axm-cell.centric{background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.5);color:#cfeaff}
+.axm-cell.driven{background:rgba(31,111,235,.85);border:1px solid #3b82f6;color:#fff}
+
 /* ===== closing ===== */
 .close{display:flex;flex-direction:column;align-items:center;gap:3.4vh;width:100%}
 .ba{display:flex;align-items:center;gap:2.6vw}
@@ -733,26 +746,35 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
   </div>
 </section>
 
-<!-- ===== S10 로드맵 + 비전 ===== -->
+<!-- ===== S10 7월 31일 오픈 + AX 성숙도 매트릭스 ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim><span class="hl">7월 31일 정식 오픈</span>, 그리고 그 너머</h2>
+  <h2 class="headline" data-anim><span class="hl">7월 31일</span> 오픈 예정</h2>
   <div class="body-wrap">
-    <div class="s10wrap">
-      <div class="road" id="road">
-        <div class="fillbar" id="fillbar"></div>
-        <div class="mstone done" data-anim><div class="pin"></div><div class="ph">1단계 SSOT 완성</div><div class="dt">✅ 완료 · 5월</div><div class="ds">데이터 수집 + SSOT 구축</div></div>
-        <div class="mstone now" data-anim><div class="pin"></div><div class="ph">2단계 마무리</div><div class="dt">🟡 6월 초</div><div class="ds">SSOT 다듬기 + 안전망</div></div>
-        <div class="mstone" data-anim><div class="pin"></div><div class="ph">3단계 부서 베타</div><div class="dt">🔵 6월 순차</div><div class="ds">펀드→투자·그로스→글로벌·홍보</div></div>
-        <div class="mstone goal" data-anim><div class="pin"></div><div class="flag">🚩</div><div class="ph">정식 오픈</div><div class="dt">🎯 7월 31일</div><div class="ds">5개 부서 daily · 73명 열람</div></div>
-      </div>
-      <div class="steps">
-        <div class="step here" data-anim><div class="sn">지금</div><h4>AI-centric</h4><p>부서별 AI 실험 · 일부 자동화</p><span class="badge">● 지금 여기</span></div>
-        <div class="arrowx" data-anim>➜</div>
-        <div class="step" data-anim><div class="sn">다음</div><h4>AI-driven</h4><p>AI가 전략·의사결정 직접 뒷받침</p></div>
-        <div class="arrowx" data-anim>➜</div>
-        <div class="step" data-anim><div class="sn">지향</div><h4>자기주도 AX</h4><p>구성원이 통합DB로 자기 업무 시스템 제작</p></div>
-      </div>
-      <div class="premise" data-anim>세 단계 공통 전제 : <b>한 곳에 정제된 데이터 = 통합DB</b></div>
+    <div class="axm">
+      <div></div>
+      <div class="axm-stages" data-anim><span>Intuition-driven</span><span>Data-centric</span><span>Data-driven</span></div>
+      <div class="axm-h ai" data-anim>AI-centric</div>
+      <div class="axm-h ai" data-anim>AI-driven</div>
+
+      <div class="axm-rl" data-anim>의사결정</div>
+      <div class="axm-band" data-anim><div class="axm-arrow"></div><div class="axm-phrase">일하는 방식의 변화</div></div>
+      <div class="axm-cell centric" data-anim>일부 자동화 PoC 중심 의사결정</div>
+      <div class="axm-cell driven" data-anim>AI 의사결정 주도 · AI 전략/제품 설계</div>
+
+      <div class="axm-rl" data-anim>데이터 활용</div>
+      <div class="axm-band" data-anim><div class="axm-arrow"></div><div class="axm-phrase">전사적 기반 강화</div></div>
+      <div class="axm-cell centric" data-anim>운영 데이터 활용한 예측·분석 지원</div>
+      <div class="axm-cell driven" data-anim>AI/데이터 플랫폼 · MLOps 내재화</div>
+
+      <div class="axm-rl" data-anim>AI 활용</div>
+      <div class="axm-band" data-anim><div class="axm-arrow"></div><div class="axm-phrase">현업 중심의 적극적 시도</div></div>
+      <div class="axm-cell centric" data-anim>챗봇·예측모델 등 부서별 AI 기능 활용</div>
+      <div class="axm-cell driven" data-anim>LLM·에이전트·자동화 워크플로우 완전 내재화</div>
+
+      <div class="axm-rl" data-anim>조직 · 문화</div>
+      <div class="axm-band" data-anim><div class="axm-arrow"></div><div class="axm-phrase">리더십으로부터의 변화</div></div>
+      <div class="axm-cell centric" data-anim>부서 AI 실험 중심</div>
+      <div class="axm-cell driven" data-anim>C-Level AI 책임 · AI 중심 전략·조직</div>
     </div>
   </div>
 </section>
