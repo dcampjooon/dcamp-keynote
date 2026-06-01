@@ -111,8 +111,11 @@ body{
 .tri-chips{display:flex;flex-wrap:wrap;gap:.4vw;margin-top:.4vh}
 .tri-chip{padding:.3em .7em;border-radius:7px;background:var(--panel-2);border:1px solid var(--line);font-size:.78vw;font-weight:600}
 .tri-chip.on{border-color:rgba(52,211,153,.5);color:#bfe7d2}.tri-chip.fu{border-color:rgba(167,139,250,.5);color:#d6c8ff}
+.tri-chip.more{border:none;background:none;color:var(--ink-faint);font-size:1.0vw;letter-spacing:.1em;padding:.3em .3em;align-self:center}
 .tri-arrow{display:flex;align-items:center;font-size:1.8vw;color:var(--cyan)}
-.cpgrid{display:grid;grid-template-columns:1fr 1fr;gap:.7vw;margin-top:.5vh}
+.tri-arrow .tflow{position:relative;width:3vw;height:3px;background:rgba(255,255,255,.12);border-radius:2px}
+.tri-arrow .tdot{position:absolute;top:-3.5px;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:aflow 2.6s linear infinite}
+.cpgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5vw}
 
 /* ===== S2 세로 3층 (근간 안에 설계 원칙) — legacy ===== */
 .stack3{width:100%;display:flex;flex-direction:column;gap:.7vh;align-items:center}
@@ -128,10 +131,10 @@ body{
 .core-head .desc{color:var(--ink-dim);font-size:.95vw;margin-top:.2vh}
 .core-head .star{margin-left:auto;font-weight:800;font-size:.92vw;padding:.35em .9em;border-radius:999px;background:var(--grad);color:#04122b}
 .core-principles{display:flex;gap:.9vw}
-.cp{flex:1;padding:1.3vh 1vw;border-radius:11px;background:rgba(8,12,32,.55);border:1px solid var(--line);display:flex;flex-direction:column;gap:.3vh}
-.cp .cpi{font-size:1.5vw;line-height:1.1}
-.cp h5{font-size:1.0vw;font-weight:800}
-.cp p{font-size:.8vw;color:var(--ink-dim);line-height:1.4}
+.cp{flex:1;padding:.7vh .8vw;border-radius:9px;background:rgba(79,156,249,.07);border:1px solid var(--line);display:flex;flex-direction:column;gap:.15vh}
+.cp h5{font-size:.92vw;font-weight:800;display:flex;align-items:center;gap:.4em}
+.cp .cpi{font-size:1.0vw;line-height:1}
+.cp p{font-size:.74vw;color:var(--ink-dim);line-height:1.35}
 .cp-lead{font-size:.85vw;font-weight:700;color:var(--cyan);margin-bottom:.2vh}
 
 /* ===== S2 mini hook (7창 → SSOT) ===== */
@@ -198,6 +201,9 @@ body{
 .stat{padding:2vh 1vw;border-radius:14px;background:var(--panel);border:1px solid var(--line);text-align:center}
 .stat .v{font-size:2.6vw;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
 .stat .k{margin-top:.6vh;color:var(--ink-dim);font-size:.85vw;font-weight:600}
+.stat .statbreak{display:flex;justify-content:center;flex-wrap:wrap;gap:.5vw;margin-top:1.3vh}
+.stat .statbreak span{padding:.45em .95em;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);font-size:.92vw;font-weight:600;color:var(--ink-dim)}
+.stat .statbreak b{color:#bfe0ff;font-weight:800;margin-left:.35em}
 .gauge-wrap{display:flex;align-items:center;gap:1.2vw;margin-top:.4vh}
 .gauge{--p:0;position:relative;width:8vw;height:8vw;border-radius:50%;background:conic-gradient(var(--cyan) calc(var(--p)*1%),rgba(255,255,255,.08) 0);flex-shrink:0}
 .gauge::after{content:"";position:absolute;inset:.7vw;border-radius:50%;background:var(--bg1)}
@@ -403,51 +409,9 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
 </section>
 
 <!-- ===== S1 전사 AX 두 축 + 전체 구조도 ===== -->
+<!-- ===== S1+S2 통합 — 전사 AX 두 축 (DX+Data) + 흩어진 데이터를 한 구조로 ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim>전사 AX의 두 축 — <span class="hl">DX × Data</span></h2>
-  <div class="body-wrap">
-    <div style="display:flex;flex-direction:column;width:100%">
-      <div class="archmap">
-        <div class="arch-col" data-anim="left">
-          <div class="arch-title">① DX 축 · 현업 업무 시스템 <small>작년부터 · dx.dcamp.kr</small></div>
-          <div class="team-row"><div class="team-name">그로스</div><div class="sys-chips"><span class="sys">배치 프로그램</span><span class="sys">기업풀 관리</span><span class="sys">그로스코칭</span><span class="sys">계약·정산</span></div></div>
-          <div class="team-row"><div class="team-name">글로벌</div><div class="sys-chips"><span class="sys">글로벌 OI</span><span class="sys">스타트업뱅킹</span></div></div>
-          <div class="team-row"><div class="team-name">투자</div><div class="sys-chips"><span class="sys">직접투자 관리</span><span class="sys">투자 포트폴리오</span><span class="sys own">AI 심사역</span></div></div>
-          <div class="team-row"><div class="team-name">펀드</div><div class="sys-chips"><span class="sys">출자 펀드</span><span class="sys">운용사 관리</span><span class="sys">펀드 포트폴리오</span></div></div>
-          <div class="team-row"><div class="team-name">홍보마케팅</div><div class="sys-chips"><span class="sys">보도자료</span><span class="sys">보도기사</span></div></div>
-          <div class="team-row"><div class="team-name">리소스</div><div class="sys-chips"><span class="sys live">오피스아워</span><span class="sys live">전문자문</span></div></div>
-          <div class="team-row"><div class="team-name">스페이스</div><div class="sys-chips"><span class="sys live">입주·대관 ↔ ctrlroom</span></div></div>
-          <div class="team-row"><div class="team-name">감사·재무</div><div class="sys-chips"><span class="sys own">일상감사</span><span class="sys own">재무포탈</span></div></div>
-        </div>
-        <div class="arch-mid" data-anim>
-          <div class="ar"><div class="adot" style="animation-delay:0s"></div><div class="adot" style="animation-delay:1.3s"></div></div>
-          <div class="ml">데이터 · API 연동</div>
-          <div class="ar"><div class="adot" style="animation-delay:.6s"></div><div class="adot" style="animation-delay:1.9s"></div></div>
-        </div>
-        <div class="arch-col back" data-anim="right">
-          <div class="arch-title">② Data 축 · 통합DB <small>AX를 위한 기반 인프라</small></div>
-          <div class="db-group">
-            <div class="db-gh">📦 엔티티 데이터베이스</div>
-            <div class="db-chips"><span class="db">기업</span><span class="db">인물</span><span class="db">사업</span><span class="db">미팅</span><span class="db">펀드</span><span class="db">뉴스</span></div>
-          </div>
-          <div class="db-group">
-            <div class="db-gh">⚙️ 공통 인프라</div>
-            <div class="db-chips"><span class="db infra">통합 인증·권한</span><span class="db infra">공통 업무 기능</span><span class="db infra">외부 시스템 연동</span><span class="db infra">데이터 이관·클렌징</span></div>
-          </div>
-          <div class="db-group">
-            <div class="db-gh">🔗 연동 소스</div>
-            <div class="db-chips"><span class="db infra">내부 기간계 · KiiPS</span><span class="db infra">외부 기업정보 · KODATA·혁신의숲</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="arch-bottom" data-anim>DX(접점·업무 혁신)와 Data(기반·통합DB)가 맞물려 전사 AX를 떠받친다 · <b>통합DB = AX를 위한 기반 인프라</b></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== S2 왜·어떻게 설계했나 (후킹 + 3층 + 원칙) ===== -->
-<section class="slide">
-  <h2 class="headline" data-anim>왜·어떻게 설계했나 — <span class="hl">흩어진 데이터를 한 구조로</span></h2>
+  <h2 class="headline" data-anim>전사 AX의 두 축 (DX + Data) · <span class="hl">흩어진 데이터를 한 구조로</span></h2>
   <div class="body-wrap">
     <div style="display:flex;flex-direction:column;width:100%">
       <div class="hooklead" data-anim>한 회사를 보려 7~8곳을 열던 일 → 데이터 구조부터 다시</div>
@@ -457,24 +421,43 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
       </div>
       <div class="tri" style="margin-top:1.2vh">
         <div class="tri-col" data-anim="left">
-          <div class="tri-tag past">접점 · 지금까지</div>
-          <div class="tri-name"><span class="ll">①</span>현업 업무 시스템</div>
-          <div class="tri-desc">데이터가 생겨나는 곳 — 부서별 단위 시스템</div>
-          <div class="tri-chips"><span class="tri-chip on">전문자문</span><span class="tri-chip on">오피스아워</span><span class="tri-chip on">AI 심사역</span><span class="tri-chip on">재무포탈</span></div>
-        </div>
-        <div class="tri-arrow" data-anim>➜</div>
-        <div class="tri-col core" data-anim>
-          <div class="tri-tag now">근간 · 지금 (오늘의 주제)</div>
-          <div class="tri-name"><span class="ll">②</span>통합DB · SSOT</div>
-          <div class="tri-desc">모든 데이터의 Single Source of Truth — 네 가지 원칙으로 설계</div>
-          <div class="cpgrid">
-            <div class="cp"><div class="cpi">🗄️</div><h5>원본 불가침</h5><p>외부 데이터 원본 영구 보관 · 사본 위에서만 가공</p></div>
-            <div class="cp"><div class="cpi">🎯</div><h5>단일 SSOT</h5><p>회사·인물 수렴점 하나 · “진짜?” 질문 제거</p></div>
-            <div class="cp"><div class="cpi">📝</div><h5>결정 기록화</h5><p>설계 판단 90건 문서화 · 추측 제거</p></div>
-            <div class="cp"><div class="cpi">🧱</div><h5>묶되 나눔</h5><p>한 시스템 안 부서별 안전 격리</p></div>
+          <div class="tri-tag past">접점 · DX 축 · 현업 업무 시스템</div>
+          <div class="tri-name"><span class="ll">①</span>현업 부서 업무 시스템</div>
+          <div class="tri-desc">데이터가 생겨나는 곳 — 단위 업무 시스템</div>
+          <div class="tri-chips">
+            <span class="tri-chip">배치 프로그램</span><span class="tri-chip">기업풀 관리</span><span class="tri-chip">그로스코칭</span><span class="tri-chip">계약·정산</span>
+            <span class="tri-chip">글로벌 OI</span><span class="tri-chip">스타트업뱅킹</span>
+            <span class="tri-chip">직접투자 관리</span><span class="tri-chip">투자 포트폴리오</span><span class="tri-chip on">AI 심사역</span>
+            <span class="tri-chip">출자 펀드</span><span class="tri-chip">운용사 관리</span><span class="tri-chip">펀드 포트폴리오</span>
+            <span class="tri-chip">보도자료</span><span class="tri-chip">보도기사</span>
+            <span class="tri-chip on">오피스아워</span><span class="tri-chip on">전문자문</span><span class="tri-chip on">입주·대관 ↔ ctrlroom</span>
+            <span class="tri-chip on">일상감사</span><span class="tri-chip on">재무포탈</span><span class="tri-chip more">…</span>
           </div>
         </div>
-        <div class="tri-arrow" data-anim>➜</div>
+        <div class="tri-arrow" data-anim><div class="tflow"><span class="tdot"></span><span class="tdot" style="animation-delay:1.3s"></span></div></div>
+        <div class="tri-col core" data-anim>
+          <div class="tri-tag now">근간 · Data 축 · 지금 (오늘의 주제)</div>
+          <div class="tri-name"><span class="ll">②</span>통합DB · SSOT</div>
+          <div class="tri-desc">모든 데이터의 Single Source of Truth — AX를 위한 기반 인프라</div>
+          <div class="db-group">
+            <div class="db-gh">📦 엔티티 데이터베이스</div>
+            <div class="db-chips"><span class="db">기업</span><span class="db">인물</span><span class="db">사업</span><span class="db">미팅</span><span class="db">펀드</span><span class="db">뉴스</span></div>
+          </div>
+          <div class="db-group">
+            <div class="db-gh">⚙️ 공통 인프라</div>
+            <div class="db-chips"><span class="db infra">통합 인증·권한</span><span class="db infra">공통 업무 기능</span><span class="db infra">외부 시스템 연동</span><span class="db infra">데이터 이관·클렌징</span></div>
+          </div>
+          <div class="db-group">
+            <div class="db-gh">🔑 4대 원칙</div>
+            <div class="cpgrid">
+              <div class="cp"><h5><span class="cpi">🗄️</span>원본 불가침</h5><p>외부 원본 영구 보관 · 사본만 가공</p></div>
+              <div class="cp"><h5><span class="cpi">🎯</span>단일 SSOT</h5><p>회사·인물 수렴점 하나 · “진짜?” 제거</p></div>
+              <div class="cp"><h5><span class="cpi">📝</span>결정 기록화</h5><p>설계 판단 90건 문서화</p></div>
+              <div class="cp"><h5><span class="cpi">🧱</span>묶되 나눔</h5><p>부서별 안전 격리</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="tri-arrow" data-anim><div class="tflow"><span class="tdot"></span><span class="tdot" style="animation-delay:1.3s"></span></div></div>
         <div class="tri-col" data-anim="right">
           <div class="tri-tag future">지능 · 다음 단계</div>
           <div class="tri-name"><span class="ll">③</span>AI 층</div>
@@ -482,14 +465,14 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
           <div class="tri-chips"><span class="tri-chip fu">AI가 읽는 IR</span><span class="tri-chip fu">회의록 자동 연결</span><span class="tri-chip fu">의사결정 지원</span></div>
         </div>
       </div>
-      <div class="archcap" data-anim>실시간 데이터 흐름으로 세 단계가 맞물림 · 구현은 단순하게 — <b>1 monorepo · 1 Cloud Run · 1 Cloud SQL</b></div>
+      <div class="archcap" data-anim>구현은 단순하게 — <b>1 monorepo · 1 Cloud Run · 1 Cloud SQL</b></div>
     </div>
   </div>
 </section>
 
 <!-- ===== S2b 지금까지의 경과 (여정) ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim>전문가 파트너들과 고군분투 — <span class="hl">자체개발 이후 폭발적 성과</span></h2>
+  <h2 class="headline" data-anim>비전을 현실로 구체화 — <span class="hl">자체개발 전환 이후 빠른 진전</span></h2>
   <div class="body-wrap">
     <div class="split2">
       <div class="col">
@@ -513,7 +496,7 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
 
 <!-- ===== S3 핵심 데이터 관계도 (SVG) ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim>출처 10여 곳 <span class="hl">→ 하나의 SSOT로 수렴</span></h2>
+  <h2 class="headline" data-anim>출처 10여 곳 <span class="hl">→ 하나의 SSOT로 수렴</span><div style="font-size:1.1vw;font-weight:600;color:#9fb0cc;margin-top:.5vh;letter-spacing:.02em">Single Source of Truth · 단일 진실 공급원</div></h2>
   <div class="body-wrap">
     <div class="svgwrap" data-anim="scale">
       <svg class="diagram" id="relmap" viewBox="0 0 1280 640" preserveAspectRatio="xMidYMid meet">
@@ -525,8 +508,8 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
         <text class="nbox" x="930" y="34" font-size="20" font-weight="800" fill="#34d399" text-anchor="middle">🏠 내부 출처 (디캠프가 만든 데이터)</text>
         <g id="relEdges"></g>
         <g class="nbox">
-          <rect x="240" y="408" width="820" height="200" rx="20" fill="rgba(79,156,249,.07)" stroke="rgba(79,156,249,.3)"/>
-          <text x="650" y="436" font-size="19" font-weight="800" fill="#bfe0ff" text-anchor="middle">⭐ 통합DB 핵심 · Single Source of Truth</text>
+          <rect x="240" y="408" width="920" height="200" rx="20" fill="rgba(79,156,249,.07)" stroke="rgba(79,156,249,.3)"/>
+          <text x="700" y="436" font-size="19" font-weight="800" fill="#bfe0ff" text-anchor="middle">⭐ 통합DB 핵심 · Single Source of Truth</text>
         </g>
         <g id="relDots"></g>
         <g id="relNodes"></g>
@@ -549,15 +532,14 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
 
 <!-- ===== S4 데이터가 흐르는 길 ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim>5단계 책임 분리 · <span class="hl">한 단계 장애도 전체 무중단</span></h2>
+  <h2 class="headline" data-anim>5단계 공정 분리 · <span class="hl">무중단 현행화 데이터 파이프라인 구조 설계</span></h2>
   <div class="body-wrap">
     <div style="display:flex;flex-direction:column;width:100%;align-items:center">
-      <div class="svgwrap" style="height:60vh" data-anim="scale">
+      <div class="svgwrap" style="height:68vh" data-anim="scale">
         <svg class="diagram" id="flowmap" viewBox="0 0 1500 720" preserveAspectRatio="xMidYMid meet">
           <g id="flowEdges"></g><g id="flowDots"></g><g id="flowNodes"></g>
         </svg>
       </div>
-      <div class="flow-note" data-anim>매칭 애매 → 사람 검수 큐 · 누락 → 자정 자동 재점검 (실제 누락 <b style="color:var(--amber)">29건</b> 선탐지)</div>
     </div>
   </div>
 </section>
@@ -578,15 +560,21 @@ kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;pad
 
 <!-- ===== S5 5주 + 숫자 ===== -->
 <section class="slide">
-  <h2 class="headline" data-anim>자체개발 4~5주의 결과 — <span class="hl">숫자로 증명</span></h2>
+  <h2 class="headline" data-anim>자체개발 4~5주의 결과 — <span class="hl">현재까지 진행 경과</span></h2>
   <div class="body-wrap">
     <div style="display:flex;flex-direction:column;gap:3vh;align-items:center;width:100%">
       <div class="coltitle" data-anim>지금 통합DB(SSOT)에 담긴 것</div>
-      <div class="numgrid" style="grid-template-columns:repeat(4,1fr);width:84vw">
-        <div class="stat" data-anim><div class="v counter" data-to="906">0</div><div class="k">기업</div></div>
-        <div class="stat" data-anim><div class="v counter" data-to="1207">0</div><div class="k">인물</div></div>
-        <div class="stat" data-anim><div class="v counter" data-to="1248">0</div><div class="k">자펀드 포트폴리오</div></div>
-        <div class="stat" data-anim><div class="v counter" data-to="923">0</div><div class="k">회사–인물 연결</div></div>
+      <div class="numgrid" style="grid-template-columns:repeat(2,1fr);width:62vw">
+        <div class="stat" data-anim>
+          <div class="v counter" data-to="2154">0</div>
+          <div class="k">기업 · 자펀드 포트폴리오</div>
+          <div class="statbreak"><span>기업 <b>906</b></span><span>자펀드 포트폴리오 <b>1,248</b></span></div>
+        </div>
+        <div class="stat" data-anim>
+          <div class="v counter" data-to="1207">0</div>
+          <div class="k">인물</div>
+          <div class="statbreak"><span>인물과의 관계 <b>923</b></span></div>
+        </div>
       </div>
       <div class="gauge-wrap" data-anim>
         <div class="gauge" id="gauge80"><div class="gv">80%+</div></div>
@@ -797,7 +785,7 @@ function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(co
 (function(){
   const nodesG=document.getElementById('relNodes'),edgesG=document.getElementById('relEdges'),dotsG=document.getElementById('relDots');
   const ext=[["KODATA","기업 기본정보·재무"],["혁신의숲","시장·투자정보"],["KiiPS-GP","직접투자"],["KiiPS-LP","출자펀드"]];
-  const intl=[["사업실·배치 시트",""],["임직원 명부 xlsx",""],["입주관리",""],["BD 자문 supabase",""],["그로스코칭 supabase",""],["그로스 노션",""]];
+  const intl=[["사업실·배치 시트",""],["임직원 명부 xlsx",""],["입주관리",""],["BD 자문","supabase"],["그로스코칭","supabase"],["그로스 노션",""]];
   const srcY=54,srcH=58,srcW=126,extX0=24,intX0=628,gap=8,src=[];
   ext.forEach((s,i)=>src.push({x:extX0+i*(srcW+gap),label:s[0],sub:s[1],kind:'ext'}));
   intl.forEach((s,i)=>src.push({x:intX0+i*(95+6),w:95,label:s[0],sub:s[1],kind:'int'}));
@@ -937,7 +925,7 @@ function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(co
     if(opt.label)el('text',{x:opt.lx,y:opt.ly,'font-size':12,fill:'#9fb0cc','font-weight':700,'text-anchor':'middle'},E).textContent=opt.label;
     {const dot=el('circle',{class:'flowdot',r:opt.dash?3.5:4.5,fill:opt.dash?'#cf8a6a':'#38e1d6'},D);
       const am=el('animateMotion',{dur:(2+(id.length%3)*0.4+(opt.dash?1.1:0))+'s',repeatCount:'indefinite',begin:(edge._i*0.12)+'s'},dot);el('mpath',{href:'#'+id},am);}}
-  hdr(88,'① 외부 출처',COL.ext[1]);hdr(382,'② 원본 보관',COL.raw[1]);hdr(722,'③ 통합 SSOT','#bfe0ff');hdr(1193,'④ 화면 데이터',COL.rm[1]);hdr(1405,'⑤ 사용자 화면',COL.ui[1]);
+  hdr(88,'① 데이터 원천 소스',COL.ext[1]);hdr(382,'② 원본 보관',COL.raw[1]);hdr(722,'③ 통합 SSOT','#bfe0ff');hdr(1193,'④ 화면 데이터',COL.rm[1]);hdr(1405,'⑤ 사용자 화면',COL.ui[1]);
   const ys=[88,178,268,358,448,538,628];
   const ext=['KODATA','혁신의숲','KiiPS-GP/LP','그로스 노션','BD·GC supabase','입주관리','내부 시트'];
   const raw=['external_kodata','external_innoforest','external_kiips_gp/lp','external_growth_notion','external_bd / external_gc','external_supabase_space','external_dcamp_sheet'];
