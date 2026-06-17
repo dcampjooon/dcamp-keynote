@@ -4,7 +4,7 @@
 import { buildPptx } from "@/lib/export-pptx";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { themeById } from "@/lib/themes";
+import { resolveTheme } from "@/lib/templates-server";
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     if (error || !rows || rows.length === 0) return Response.json({ error: "슬라이드를 찾을 수 없습니다." }, { status: 404 });
 
     const title = deck?.title || "발표";
-    const theme = themeById((deck?.theme as { id?: string } | null)?.id);
+    const theme = await resolveTheme((deck?.theme as { id?: string } | null)?.id);
     const buf = await buildPptx(title, rows as unknown as RenderSlide[], theme.tokens["--blue"]);
     const filename = `${title.replace(/[^\p{L}\p{N}\-_]+/gu, "_").slice(0, 40) || "deck"}.pptx`;
 

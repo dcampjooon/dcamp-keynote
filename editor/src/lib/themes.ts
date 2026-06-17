@@ -11,7 +11,14 @@ export type Theme = {
   surround: string;
   /** 선택 UI 미리보기용 대표색 */
   swatch: [string, string];
+  /** 빌트인(수정/삭제 불가) 여부 */
+  builtin?: boolean;
 };
+
+/** 두 액센트 색에서 토큰 묶음을 만든다(템플릿 에디터·DB 행 → Theme 공용). */
+export function tokensFrom(accent1: string, accent2: string, canvasBg: string): Record<string, string> {
+  return { "--blue": accent1, "--cyan": accent2, "--grad": `linear-gradient(120deg, ${accent1}, ${accent2})`, "--canvas-bg": canvasBg };
+}
 
 export const THEMES: Theme[] = [
   { id: "dcamp-white", name: "디캠프 화이트", desc: "블루→시안 (기본)", tokens: {}, surround: "#0a0e24", swatch: ["#2f6df6", "#14b8c4"] },

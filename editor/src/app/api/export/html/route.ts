@@ -4,7 +4,7 @@
 import { buildExportHtml } from "@/lib/export-html";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { themeById } from "@/lib/themes";
+import { resolveTheme } from "@/lib/templates-server";
 
 export async function GET(request: Request) {
   try {
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     }
 
     const title = deck?.title || "발표";
-    const theme = themeById((deck?.theme as { id?: string } | null)?.id);
+    const theme = await resolveTheme((deck?.theme as { id?: string } | null)?.id);
     const html = await buildExportHtml(title, rows as unknown as RenderSlide[], theme);
 
     const filename = `${title.replace(/[^\p{L}\p{N}\-_]+/gu, "_").slice(0, 40) || "deck"}.html`;
