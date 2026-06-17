@@ -126,7 +126,7 @@ export function Diagram({ block }: { block: DiagramBlock }) {
         const cy = p.y + NH / 2;
         return (
           <g key={node.id} className="ppt-node">
-            <rect x={p.x} y={p.y} width={NW} height={NH} rx={12} stroke={c} strokeWidth={2} />
+            <rect x={p.x} y={p.y} width={NW} height={NH} rx={0} stroke={c} strokeWidth={2} />
             <text x={p.x + NW / 2} y={cy + (lines.length === 1 ? 6 : -2)} textAnchor="middle" fontSize={15} fill="var(--ink)">
               {lines.length === 1 ? (
                 lines[0]

@@ -82,7 +82,7 @@ function addBlock(slide: Slide, b: Block, x: number, y: number, w: number, h: nu
       slide.addText(`🖼 ${b.prompt || "이미지"}`, { x, y, w, h, fontFace: FONT, fontSize: pt(16), color: INK_FAINT, align: "center", valign: "middle" });
       break;
     case "freecanvas":
-      slide.addShape("roundRect", { x, y, w, h, rectRadius: 0.06, fill: { color: "f8fafc" }, line: { color: "e6eaf2", width: 1, dashType: "dash" } });
+      slide.addShape("roundRect", { x, y, w, h, rectRadius: 0, fill: { color: "f8fafc" }, line: { color: "e6eaf2", width: 1, dashType: "dash" } });
       slide.addText("커스텀 비주얼 — HTML 익스포트에서 확인", { x, y, w, h, fontFace: FONT, fontSize: pt(15), color: INK_FAINT, align: "center", valign: "middle" });
       break;
   }
@@ -137,7 +137,7 @@ function addDiagram(slide: Slide, b: Extract<Block, { type: "diagram" }>, rx: nu
     const color = HEX[nd.color] ?? HEX.blue;
     slide.addText(nd.label.replace(/\\n|\n/g, " ").replace(/\s+/g, " ").trim(), {
       x: X(p.x), y: Y(p.y), w: NW * sc, h: NH * sc,
-      shape: "roundRect", rectRadius: 0.06,
+      shape: "roundRect", rectRadius: 0,
       fill: { color: "FFFFFF" }, line: { color, width: 1.75 },
       fontFace: FONT, fontSize: pt(15), bold: true, color: INK, align: "center", valign: "middle",
     });

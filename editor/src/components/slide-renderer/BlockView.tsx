@@ -155,7 +155,7 @@ export function BlockView({
               width: "100%",
               height: "100%",
               border: "2px dashed var(--line)",
-              borderRadius: 12,
+              borderRadius: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

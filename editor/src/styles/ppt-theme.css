@@ -29,7 +29,7 @@
   /* 템플릿에서 조정 가능한 토큰(기본값) */
   --font: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --wb: normal;            /* word-break: keep-all로 한글 잘림 방지 가능 */
-  --radius: 10px;          /* callout·카드 모서리 */
+  --radius: 0px;          /* callout·카드 모서리 */
   --pad: 64px 80px;        /* 슬라이드 여백(밀도) */
   --h-title: 60px;         /* 표지 헤드라인 */
   --h-section: 52px;       /* 간지 헤드라인 */
@@ -39,7 +39,7 @@
   height: 720px;
   background: var(--canvas-bg);
   color: var(--ink);
-  border-radius: 14px;
+  border-radius: 0;
   box-shadow: 0 24px 70px -28px rgba(20, 35, 70, 0.45);
   overflow: hidden;
   transform-origin: center center;
@@ -52,7 +52,7 @@
   content: "";
   position: absolute;
   inset: 56px 72px;
-  border-radius: 6px;
+  border-radius: 0;
   pointer-events: none;
 }
 .ppt-slide {
@@ -123,7 +123,7 @@
   top: 9px;
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: 0;
   background: var(--grad);
 }
 .ppt-callout {
@@ -164,5 +164,5 @@
 @keyframes ppt-scale { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
 
 /* 인라인 편집 단서 */
-[data-editable] { border-radius: 6px; transition: background .15s, box-shadow .15s; cursor: text; }
+[data-editable] { border-radius: 0; transition: background .15s, box-shadow .15s; cursor: text; }
 [data-editable]:hover { background: rgba(47, 109, 246, 0.07); box-shadow: 0 0 0 2px rgba(47, 109, 246, 0.15); }

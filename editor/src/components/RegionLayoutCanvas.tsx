@@ -15,6 +15,7 @@ export function RegionLayoutCanvas({
   fallbackBg,
   editable = false,
   selectedId,
+  overlayUrl,
   onSelect,
   onChange,
 }: {
@@ -23,6 +24,7 @@ export function RegionLayoutCanvas({
   fallbackBg?: string;
   editable?: boolean;
   selectedId?: string;
+  overlayUrl?: string; // 원본 PDF 페이지 이미지(옅게 겹쳐 비교)
   onSelect?: (id: string) => void;
   onChange?: (regions: Region[]) => void;
 }) {
@@ -93,6 +95,10 @@ export function RegionLayoutCanvas({
         style={{ ...(tokens as React.CSSProperties), background: bg, color: fg, transformOrigin: "center center" }}
         onPointerDown={() => onSelect?.("")}
       >
+        {overlayUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={overlayUrl} alt="원본" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", opacity: 0.45, pointerEvents: "none", zIndex: 0 }} />
+        )}
         {regions.map((r) => {
           const sel = editable && r.id === selectedId;
           const common: React.CSSProperties = { position: "absolute", left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` };
@@ -108,7 +114,7 @@ export function RegionLayoutCanvas({
           }
           if (r.kind === "placeholder") {
             return (
-              <div key={r.id} style={{ ...common, border: "2px dashed var(--line)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)", fontSize: 16 }}
+              <div key={r.id} style={{ ...common, border: "2px dashed var(--line)", borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)", fontSize: 16 }}
                 onPointerDown={(e) => drag(e, r.id, "move")}>
                 {r.label === "chart" ? "📊 차트 영역" : r.sampleText || r.label}
                 {sel && <Handles onResize={(e) => drag(e, r.id, "resize")} />}
@@ -138,7 +144,7 @@ function Handles({ onResize }: { onResize: (e: React.PointerEvent) => void }) {
   return (
     <div
       onPointerDown={onResize}
-      style={{ position: "absolute", right: -6, bottom: -6, width: 14, height: 14, borderRadius: 3, background: "var(--blue)", border: "2px solid #fff", cursor: "nwse-resize", zIndex: 5 }}
+      style={{ position: "absolute", right: -6, bottom: -6, width: 14, height: 14, borderRadius: 0, background: "var(--blue)", border: "2px solid #fff", cursor: "nwse-resize", zIndex: 5 }}
     />
   );
 }

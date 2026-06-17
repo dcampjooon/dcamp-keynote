@@ -59,7 +59,7 @@ export function SlideView({
       style={{
         width: spec.accent === "block" ? 28 : 56,
         height: spec.accent === "block" ? 28 : 6,
-        borderRadius: spec.accent === "block" ? 6 : 999,
+        borderRadius: 0,
         background: "var(--grad)",
         margin: isCenter ? "0 auto 14px" : "0 0 14px",
         animationDelay: "60ms",

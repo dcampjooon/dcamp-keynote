@@ -34,6 +34,7 @@ const Layout = z.object({
   kicker: z.boolean().default(false),
   footer: z.boolean().default(false),
   columns: z.number().int().describe("본문 차트/콘텐츠 컬럼 수(1단이면 1, 좌우 2단이면 2)"),
+  sourcePage: z.number().int().default(1).describe("이 레이아웃을 가장 잘 보여주는 PDF 페이지 번호(1부터)"),
   regions: z.array(RegionZ).max(14).describe("이 레이아웃을 구성하는 영역들 — 위치(%)·역할·실제 텍스트·선·차트 자리·푸터까지"),
 });
 

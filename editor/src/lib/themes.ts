@@ -36,6 +36,7 @@ export type LayoutSpec = {
   footer: boolean; // (레거시) 하단 푸터 표시 — regions 없을 때 폴백용
   columns: 1 | 2; // 본문 영역 컬럼 수
   regions?: Region[]; // 영역 기반 정의(있으면 영역으로 렌더, 없으면 위 스펙으로 폴백)
+  sourcePage?: number; // 이 레이아웃을 대표하는 원본 PDF 페이지(1-based) — '원본 보기' 오버레이용
 };
 
 export const DEFAULT_LAYOUTS: LayoutSpec[] = [
@@ -109,7 +110,7 @@ export type TemplateSettings = {
 
 export const DEFAULT_SETTINGS: TemplateSettings = {
   accent1: "#2f6df6", accent2: "#14b8c4", canvasBg: "#ffffff", ink: "#16233d", surround: "#0a0e24",
-  fontId: "pretendard", keepAll: false, radius: 10, density: "normal", titleSize: 60, sectionSize: 52, bodySize: 40,
+  fontId: "pretendard", keepAll: false, radius: 0, density: "normal", titleSize: 60, sectionSize: 52, bodySize: 40,
 };
 
 export function settingsToTokens(s: TemplateSettings): Record<string, string> {

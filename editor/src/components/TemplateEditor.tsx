@@ -3,10 +3,11 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
+import { renderPdfPageToDataUrl } from "@/lib/pdf-render";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DeckView } from "@/components/slide-renderer/DeckView";
@@ -65,6 +66,10 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const [selReg, setSelReg] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pdfBuf, setPdfBuf] = useState<ArrayBuffer | null>(null);
+  const [overlayOn, setOverlayOn] = useState(false);
+  const [overlayUrl, setOverlayUrl] = useState("");
+  const pageCache = useRef<Map<number, string>>(new Map());
 
   const set = <K extends keyof TemplateSettings>(k: K, v: TemplateSettings[K]) => setS((p) => ({ ...p, [k]: v }));
   const tokens = useMemo(() => settingsToTokens(s), [s]);
@@ -84,6 +89,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   async function analyzePdf(file: File) {
     setAnalyzing(true);
     try {
+      const buf = await file.arrayBuffer();
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/templates/analyze", { method: "POST", body: fd });
@@ -92,6 +98,8 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
       setS((prev) => ({ ...prev, ...data.settings }));
       if (Array.isArray(data.layouts) && data.layouts.length) { setLayouts(data.layouts); setSel(0); }
       if (data.name) setName(data.name);
+      setPdfBuf(buf);
+      pageCache.current.clear();
       toast.success(data.rationale ? `분석 완료 — ${data.rationale}` : "PDF 디자인을 템플릿으로 가져왔습니다.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "오류");
@@ -133,6 +141,20 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   }
 
   const sample = sampleForRole(cur.role);
+  const canOverlay = !!pdfBuf && !!cur.sourcePage;
+
+  // 원본 보기: 현재 레이아웃의 소스 페이지를 이미지로 렌더(캐시)
+  useEffect(() => {
+    if (!overlayOn || !pdfBuf || !cur.sourcePage) { setOverlayUrl(""); return; }
+    const page = cur.sourcePage;
+    const cached = pageCache.current.get(page);
+    if (cached) { setOverlayUrl(cached); return; }
+    let alive = true;
+    void renderPdfPageToDataUrl(pdfBuf, page)
+      .then((url) => { if (alive) { pageCache.current.set(page, url); setOverlayUrl(url); } })
+      .catch(() => { if (alive) setOverlayUrl(""); });
+    return () => { alive = false; };
+  }, [overlayOn, pdfBuf, cur.sourcePage]);
 
   return (
     <>
@@ -300,10 +322,18 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
         </aside>
 
         <section className="flex h-full min-w-0 flex-col gap-3 p-6" style={{ background: s.surround }}>
-          <div className="text-xs font-medium text-white/70">미리보기 — {cur.name || ROLE_LABEL[cur.role]} {regions.length ? "(영역 드래그·리사이즈)" : ""}</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-white/70">미리보기 — {cur.name || ROLE_LABEL[cur.role]} {regions.length ? "(영역 드래그·리사이즈)" : ""}</div>
+            {canOverlay && (
+              <button onClick={() => setOverlayOn((v) => !v)}
+                className={`rounded px-2.5 py-1 text-xs font-medium transition ${overlayOn ? "bg-white text-black" : "bg-white/15 text-white/80 hover:bg-white/25"}`}>
+                {overlayOn ? "원본 숨기기" : "원본 보기(겹쳐 비교)"}
+              </button>
+            )}
+          </div>
           <div className="min-h-0 flex-1">
             {regions.length ? (
-              <RegionLayoutCanvas spec={cur} tokens={tokens} editable selectedId={selReg} onSelect={setSelReg} onChange={setRegions} />
+              <RegionLayoutCanvas spec={cur} tokens={tokens} editable selectedId={selReg} overlayUrl={overlayOn ? overlayUrl : undefined} onSelect={setSelReg} onChange={setRegions} />
             ) : (
               <DeckView slides={[sample]} index={0} onIndexChange={() => {}} themeTokens={tokens} layouts={[cur]} />
             )}

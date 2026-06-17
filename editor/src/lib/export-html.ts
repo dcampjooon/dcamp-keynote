@@ -87,7 +87,7 @@ function renderDiagram(block: DiagramBlock, uid: string): string {
         lines.length === 1
           ? `<text x="${p.x + NW / 2}" y="${cy + 6}" text-anchor="middle" font-size="15" fill="var(--ink)">${esc(lines[0])}</text>`
           : `<text x="${p.x + NW / 2}" y="${cy - 2}" text-anchor="middle" font-size="15" fill="var(--ink)">${lines.map((ln, k) => `<tspan x="${p.x + NW / 2}" dy="${k === 0 ? 0 : 18}">${esc(ln)}</tspan>`).join("")}</text>`;
-      return `<g class="ppt-node"><rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="12" stroke="${c}" stroke-width="2"></rect>${text}</g>`;
+      return `<g class="ppt-node"><rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="0" stroke="${c}" stroke-width="2"></rect>${text}</g>`;
     })
     .join("");
 
@@ -123,7 +123,7 @@ function renderBlock(block: Block, delay: number, slideIdx: number, blockIdx: nu
     case "diagram":
       return `<div class="ppt-svgwrap" ${anim}>${renderDiagram(block, `d${slideIdx}_${blockIdx}_`)}</div>`;
     case "image":
-      return `<div class="ppt-svgwrap" ${anim}><div style="width:100%;height:100%;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px">🖼 ${esc(block.prompt || "이미지")}</div></div>`;
+      return `<div class="ppt-svgwrap" ${anim}><div style="width:100%;height:100%;border:2px dashed var(--line);border-radius:0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px">🖼 ${esc(block.prompt || "이미지")}</div></div>`;
     case "freecanvas":
       return `<div class="ppt-svgwrap" ${anim}>${sanitizeSvg(block.svg)}</div>`;
     default:
@@ -161,7 +161,7 @@ function renderSlide(slide: RenderSlide, idx: number, total: number, layouts: La
 
   const accentBar =
     spec.accent !== "none" && spec.accent !== "underline"
-      ? `<div data-anim="scale" style="width:${spec.accent === "block" ? 28 : 56}px;height:${spec.accent === "block" ? 28 : 6}px;border-radius:${spec.accent === "block" ? 6 : 999}px;background:var(--grad);margin:${isCenter ? "0 auto 14px" : "0 0 14px"};animation-delay:60ms"></div>`
+      ? `<div data-anim="scale" style="width:${spec.accent === "block" ? 28 : 56}px;height:${spec.accent === "block" ? 28 : 6}px;border-radius:0;background:var(--grad);margin:${isCenter ? "0 auto 14px" : "0 0 14px"};animation-delay:60ms"></div>`
       : "";
   const titleStyle = `font-size:${spec.titleSize}px;animation-delay:${delay()}ms${spec.accent === "underline" ? ";border-bottom:4px solid var(--blue);padding-bottom:8px;display:inline-block" : ""}`;
   const titleEl = showTitle ? `<h2 class="ppt-headline" data-anim="rise" style="${titleStyle}">${esc(slide.title)}</h2>` : "";
