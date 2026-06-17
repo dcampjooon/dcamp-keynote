@@ -18,8 +18,11 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
+  // Supabase 프록시 경로는 인증 보호에서 제외(Supabase가 apikey/토큰으로 자체 인증) → 원격으로 중계되게 통과
+  if (path.startsWith("/sb-proxy")) return response;
+
+  const { data: { user } } = await supabase.auth.getUser();
   const isAuthRoute = path.startsWith("/login");
 
   if (!user && !isAuthRoute) {
