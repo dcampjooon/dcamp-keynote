@@ -4,9 +4,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +19,6 @@ type Stage = "idle" | "outlining" | "outline" | "generating" | "ready";
 type DeckSummary = { id: string; title: string; theme: { id?: string } | null; updated_at: string };
 
 export default function Home() {
-  const router = useRouter();
   const [stage, setStage] = useState<Stage>("idle");
   const [decks, setDecks] = useState<DeckSummary[]>([]);
   const [brief, setBrief] = useState("");
@@ -57,12 +54,6 @@ export default function Home() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "오류");
     }
-  }
-
-  async function logout() {
-    await createSupabaseBrowser().auth.signOut();
-    router.replace("/login");
-    router.refresh();
   }
 
   // 개발용: 생성된 덱 JSON을 콘솔/자동화로 주입해 렌더 확인 (window.__loadSlides(arr))
@@ -195,9 +186,6 @@ export default function Home() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">키노트 에디터</h1>
-            <button onClick={() => void logout()} className="ml-auto text-xs text-muted-foreground hover:underline">
-              로그아웃
-            </button>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">자연어로 설명하면 발표를 설계·생성합니다.</p>
         </div>

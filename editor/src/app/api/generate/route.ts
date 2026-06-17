@@ -5,7 +5,7 @@ import { z } from "zod";
 import { anthropic, MODEL } from "@/lib/anthropic";
 import { SLIDE_SYSTEM, deckContext } from "@/lib/prompts";
 import { Outline, Slide, type SlidePlan } from "@/lib/slide-schema";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin, DEV_USER_ID } from "@/lib/supabase/admin";
 
 const SlideContent = Slide.omit({ id: true });
 // 블록 union이 커서 strict structured output은 "grammar too large"로 거부된다.
@@ -22,14 +22,12 @@ export async function POST(request: Request) {
     const outline = parsed.data;
     const themeId = typeof body.themeId === "string" ? body.themeId : "dcamp-white";
 
-    const supabase = await createSupabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return Response.json({ error: "로그인이 필요합니다." }, { status: 401 });
+    const supabase = supabaseAdmin;
 
-    // 1) 덱 생성 (owner=세션 사용자, 트리거가 deck_members에 owner 등록 → RLS 통과)
+    // 1) 덱 생성 (owner=고정 dev 유저)
     const { data: deck, error: deckErr } = await supabase
       .from("decks")
-      .insert({ owner: user.id, title: outline.title || "제목 없는 발표", status: "generating", theme: { id: themeId } })
+      .insert({ owner: DEV_USER_ID, title: outline.title || "제목 없는 발표", status: "generating", theme: { id: themeId } })
       .select()
       .single();
     if (deckErr || !deck) {

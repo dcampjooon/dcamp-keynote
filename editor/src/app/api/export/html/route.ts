@@ -3,7 +3,7 @@
 
 import { buildExportHtml } from "@/lib/export-html";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { themeById } from "@/lib/themes";
 
 export async function GET(request: Request) {
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const deckId = new URL(request.url).searchParams.get("deckId");
     if (!deckId) return Response.json({ error: "deckId가 필요합니다." }, { status: 400 });
 
-    const supabase = await createSupabaseServer();
+    const supabase = supabaseAdmin;
     const { data: deck } = await supabase.from("decks").select("title, theme").eq("id", deckId).single();
     const { data: rows, error } = await supabase
       .from("slides")

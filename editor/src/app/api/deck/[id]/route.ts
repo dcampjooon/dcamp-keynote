@@ -1,11 +1,11 @@
 // ABOUTME: 덱 단건 로드(GET). 테마 + 슬라이드(편집 가능 형태)를 반환. RLS로 멤버만 접근 가능.
 
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function GET(_req: Request, ctx: RouteContext<"/api/deck/[id]">) {
   try {
     const { id } = await ctx.params;
-    const supabase = await createSupabaseServer();
+    const supabase = supabaseAdmin;
     const { data: deck, error: deckErr } = await supabase.from("decks").select("id, title, theme").eq("id", id).single();
     if (deckErr || !deck) return Response.json({ error: "덱을 찾을 수 없습니다." }, { status: 404 });
 

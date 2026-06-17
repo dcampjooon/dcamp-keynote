@@ -2,7 +2,7 @@
 // ABOUTME: 같은 슬라이드를 다른 곳에서 먼저 바꿨으면(version 불일치) 409로 거부 — 편집 충돌 방지.
 
 import { Slide } from "@/lib/slide-schema";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 
 const PatchBody = z.object({
@@ -23,7 +23,7 @@ export async function PATCH(request: Request) {
     const { slideId, version, ...fields } = parsed.data;
     const update = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
 
-    const supabase = await createSupabaseServer();
+    const supabase = supabaseAdmin;
     const { data, error } = await supabase
       .from("slides")
       .update({ ...update, version: version + 1 })
