@@ -70,6 +70,21 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const [overlayOn, setOverlayOn] = useState(false);
   const [overlayUrl, setOverlayUrl] = useState("");
   const pageCache = useRef<Map<number, string>>(new Map());
+  const [ready, setReady] = useState(!!initial); // 신규 PDF 흐름은 분석 후 카드 표시
+  const [logs, setLogs] = useState<string[]>([]);
+  const [pdfPath, setPdfPath] = useState(initial?.pdfPath ?? "");
+  const [pdfDirty, setPdfDirty] = useState(false);
+
+  // 기존 템플릿에 저장된 원본 PDF가 있으면 불러와 '원본 보기' 가능하게
+  useEffect(() => {
+    if (initial?.pdfPath && !pdfBuf) {
+      void fetch(`/api/templates/pdf?path=${encodeURIComponent(initial.pdfPath)}`)
+        .then((r) => (r.ok ? r.arrayBuffer() : null))
+        .then((b) => { if (b) setPdfBuf(b); })
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const set = <K extends keyof TemplateSettings>(k: K, v: TemplateSettings[K]) => setS((p) => ({ ...p, [k]: v }));
   const tokens = useMemo(() => settingsToTokens(s), [s]);
@@ -88,20 +103,37 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
 
   async function analyzePdf(file: File) {
     setAnalyzing(true);
+    const STEPS = [
+      `📄 PDF 업로드 (${(file.size / 1048576).toFixed(1)}MB) · ${file.name}`,
+      "🔍 페이지 전체를 함께 분석 중…",
+      "🎨 색 팔레트·폰트·여백 추출 중…",
+      "🧩 레이아웃 종류(표지/간지/본문…) 발견 중…",
+      "📐 영역 위치·선·텍스트·차트 자리 추출 중…",
+      "🖊 실제 텍스트를 영역에 매핑 중…",
+    ];
+    setLogs([STEPS[0]]);
+    let i = 1;
+    const iv = setInterval(() => { if (i < STEPS.length) setLogs((l) => [...l, STEPS[i++]]); }, 2200);
     try {
       const buf = await file.arrayBuffer();
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/templates/analyze", { method: "POST", body: fd });
       const data = await res.json();
+      clearInterval(iv);
       if (!res.ok) throw new Error(data.error || "분석 실패");
       setS((prev) => ({ ...prev, ...data.settings }));
-      if (Array.isArray(data.layouts) && data.layouts.length) { setLayouts(data.layouts); setSel(0); }
+      const n = Array.isArray(data.layouts) ? data.layouts.length : 0;
+      if (n) { setLayouts(data.layouts); setSel(0); setSelReg(""); }
       if (data.name) setName(data.name);
       setPdfBuf(buf);
+      setPdfDirty(true);
       pageCache.current.clear();
-      toast.success(data.rationale ? `분석 완료 — ${data.rationale}` : "PDF 디자인을 템플릿으로 가져왔습니다.");
+      setLogs((l) => [...l, `✅ 완료 — 레이아웃 ${n}종 추출${data.rationale ? `\n   ${data.rationale}` : ""}`]);
+      setReady(true);
     } catch (e) {
+      clearInterval(iv);
+      setLogs((l) => [...l, `⚠ 실패 — ${e instanceof Error ? e.message : "오류"}`]);
       toast.error(e instanceof Error ? e.message : "오류");
     } finally {
       setAnalyzing(false);
@@ -122,11 +154,20 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
     if (!name.trim()) return toast.error("이름을 입력하세요.");
     setSaving(true);
     try {
+      // 새로 분석한 PDF가 있으면 Storage에 저장해 언제든 원본 비교 가능하게
+      let savedPdfPath = pdfPath;
+      if (pdfDirty && pdfBuf) {
+        const fd = new FormData();
+        fd.append("file", new Blob([pdfBuf], { type: "application/pdf" }), "source.pdf");
+        const up = await fetch("/api/templates/pdf", { method: "POST", body: fd });
+        const upd = await up.json();
+        if (up.ok && upd.path) { savedPdfPath = upd.path; setPdfPath(upd.path); setPdfDirty(false); }
+      }
       const isUpdate = !!templateId && !readOnly;
       const res = await fetch(isUpdate ? `/api/templates/${templateId}` : "/api/templates", {
         method: isUpdate ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts }),
+        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts, pdfPath: savedPdfPath }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "저장 실패");
@@ -176,8 +217,21 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
               <input type="file" accept="application/pdf" className="hidden" disabled={analyzing}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) void analyzePdf(f); e.target.value = ""; }} />
             </label>
+            {/* 진행 로그 */}
+            {logs.length > 0 && (
+              <div className="mt-1 flex flex-col gap-0.5 rounded-md border bg-background p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                {logs.map((l, i) => (<div key={i} className="whitespace-pre-wrap">{l}</div>))}
+                {analyzing && <div className="animate-pulse">▍</div>}
+              </div>
+            )}
           </div>
 
+          {!ready && !analyzing && (
+            <button className="self-start text-xs text-muted-foreground hover:underline" onClick={() => setReady(true)}>또는 빈 템플릿으로 직접 만들기 →</button>
+          )}
+
+          {ready && (
+          <>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">이름</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="템플릿 이름" />
@@ -319,6 +373,8 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
           </div>
 
           <Button onClick={() => void save()} disabled={saving}>{saving ? "저장 중…" : templateId && !readOnly ? "수정 저장" : "새 템플릿으로 저장"}</Button>
+          </>
+          )}
         </aside>
 
         <section className="flex h-full min-w-0 flex-col gap-3 p-6" style={{ background: s.surround }}>

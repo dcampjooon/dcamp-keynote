@@ -19,7 +19,7 @@ export async function PUT(request: Request, ctx: RouteContext<"/api/templates/[i
   const b = await request.json();
   const { data, error } = await supabaseAdmin
     .from("templates")
-    .update({ name: b.name?.trim(), description: b.desc ?? "", theme: { tokens: b.tokens ?? {}, surround: b.surround ?? "#0a0e24", swatch: b.swatch ?? ["#2f6df6", "#14b8c4"], layouts: b.layouts ?? [] } })
+    .update({ name: b.name?.trim(), description: b.desc ?? "", theme: { tokens: b.tokens ?? {}, surround: b.surround ?? "#0a0e24", swatch: b.swatch ?? ["#2f6df6", "#14b8c4"], layouts: b.layouts ?? [], pdfPath: b.pdfPath ?? "" } })
     .eq("id", id)
     .eq("owner", DEV_USER_ID)
     .select("id, name, description, theme")

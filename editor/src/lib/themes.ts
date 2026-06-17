@@ -63,6 +63,8 @@ export type Theme = {
   swatch: [string, string];
   /** PDF에서 발견·정의된 레이아웃들(없으면 기본 3종) */
   layouts?: LayoutSpec[];
+  /** 원본 샘플 PDF의 Storage 경로(있으면 '원본 보기'로 언제든 겹쳐 비교) */
+  pdfPath?: string;
   /** 빌트인(수정/삭제 불가) 여부 */
   builtin?: boolean;
 };
