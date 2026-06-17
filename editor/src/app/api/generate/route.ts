@@ -1,0 +1,99 @@
+// ABOUTME: [생성 단계] 라우트. 확정된 아웃라인 → 슬라이드를 하나씩 생성·검증(zod)·DB 저장 → 덱 반환.
+// ABOUTME: 전체 한방 생성 금지(codex 권고). 슬라이드 단위 호출 + 실패 시 1회 리페어. 진행은 ai_jobs로 추적.
+
+import { anthropic, MODEL } from "@/lib/anthropic";
+import { SLIDE_SYSTEM, deckContext } from "@/lib/prompts";
+import { Outline, Slide, type SlidePlan } from "@/lib/slide-schema";
+import { supabaseAdmin, DEV_USER_ID } from "@/lib/supabase";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+
+const SlideContent = Slide.omit({ id: true });
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const parsed = Outline.safeParse(body.outline);
+    if (!parsed.success) {
+      return Response.json({ error: "유효한 아웃라인이 아닙니다.", detail: parsed.error.issues }, { status: 400 });
+    }
+    const outline = parsed.data;
+
+    // 1) 덱 생성
+    const { data: deck, error: deckErr } = await supabaseAdmin
+      .from("decks")
+      .insert({ owner: DEV_USER_ID, title: outline.title || "제목 없는 발표", status: "generating" })
+      .select()
+      .single();
+    if (deckErr || !deck) {
+      return Response.json({ error: `덱 생성 실패: ${deckErr?.message}` }, { status: 500 });
+    }
+
+    // ai_job 시작 기록
+    const { data: job } = await supabaseAdmin
+      .from("ai_jobs")
+      .insert({ deck_id: deck.id, kind: "generate_slide", status: "running", input: { outline } })
+      .select()
+      .single();
+
+    const ctx = deckContext(
+      outline.title,
+      outline.storyline,
+      outline.slides.map((s) => `[${s.layout}] ${s.headline}`),
+    );
+
+    // 2) 슬라이드 단위 생성 + 검증 + 저장
+    const slides = [];
+    for (let i = 0; i < outline.slides.length; i++) {
+      const plan = outline.slides[i];
+      const content = await generateSlide(ctx, plan, i + 1, outline.slides.length);
+
+      const { data: row, error: slideErr } = await supabaseAdmin
+        .from("slides")
+        .insert({ deck_id: deck.id, idx: i, layout: content.layout, blocks: content.blocks, notes: content.notes })
+        .select()
+        .single();
+      if (slideErr || !row) {
+        await supabaseAdmin.from("ai_jobs").update({ status: "failed", error: slideErr?.message }).eq("id", job?.id);
+        return Response.json({ error: `슬라이드 ${i + 1} 저장 실패: ${slideErr?.message}` }, { status: 500 });
+      }
+      slides.push({ id: row.id, ...content });
+    }
+
+    await supabaseAdmin.from("decks").update({ status: "ready" }).eq("id", deck.id);
+    await supabaseAdmin.from("ai_jobs").update({ status: "succeeded", output: { count: slides.length } }).eq("id", job?.id);
+
+    return Response.json({ deckId: deck.id, title: outline.title, subtitle: outline.subtitle, slides });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "알 수 없는 오류";
+    return Response.json({ error: message }, { status: 500 });
+  }
+}
+
+/** 슬라이드 한 장 생성. parse 실패 시 1회 리페어 후, 그래도 실패하면 최소 슬라이드로 폴백. */
+async function generateSlide(ctx: string, plan: SlidePlan, n: number, total: number) {
+  const planText = `[이 슬라이드(${n}/${total}) 계획]
+목적: ${plan.purpose}
+헤드라인: ${plan.headline}
+레이아웃: ${plan.layout}
+들어갈 요소: ${plan.blockHints.join(" / ")}`;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const msg = await anthropic().messages.parse({
+      model: MODEL,
+      max_tokens: 4000,
+      thinking: { type: "adaptive" },
+      system: SLIDE_SYSTEM,
+      messages: [{ role: "user", content: `${ctx}\n\n${planText}${attempt > 0 ? "\n\n(이전 출력이 스키마에 맞지 않았다. 스키마를 엄격히 지켜 다시 생성하라.)" : ""}` }],
+      output_config: { format: zodOutputFormat(SlideContent) },
+    });
+    if (msg.parsed_output) return msg.parsed_output;
+  }
+
+  // 폴백: 헤드라인만 담은 최소 슬라이드
+  return {
+    layout: plan.layout,
+    title: plan.headline,
+    blocks: [{ id: "h", type: "heading" as const, text: plan.headline, accent: "", column: "full" as const, anim: "rise" as const }],
+    notes: plan.purpose,
+  };
+}
