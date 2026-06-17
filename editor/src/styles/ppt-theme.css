@@ -35,8 +35,8 @@
   --h-section: 52px;       /* 간지 헤드라인 */
   --h-standard: 40px;      /* 본문 헤드라인 */
   position: relative;
-  width: 1280px;
-  height: 720px;
+  width: var(--cw, 1280px);
+  height: var(--ch, 720px);
   background: var(--canvas-bg);
   color: var(--ink);
   border-radius: 0;

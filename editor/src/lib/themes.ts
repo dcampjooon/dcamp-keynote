@@ -1,6 +1,20 @@
 // ABOUTME: 사전 지정 빌트인 템플릿(테마). 액센트 팔레트·캔버스 톤·익스포트 배경을 정의한다.
 // ABOUTME: 토큰은 .ppt-canvas의 CSS 변수를 오버라이드 — 흰 캔버스/짙은 텍스트 기조를 유지해 모든 블록 가독성을 보장한다.
 
+/* ---------- 페이지 규격(크기·방향) ---------- */
+export type PageSize = "16:9" | "a4";
+export type Orientation = "landscape" | "portrait";
+export type PageSpec = { size: PageSize; orientation: Orientation };
+export const DEFAULT_PAGE: PageSpec = { size: "16:9", orientation: "landscape" };
+
+/** 페이지 규격 → 캔버스 px 크기(96dpi 기준). 가로/세로는 폭·높이를 뒤바꾼다. */
+export function pageDims(p?: PageSpec): { w: number; h: number } {
+  const size = p?.size ?? "16:9";
+  const o = p?.orientation ?? "landscape";
+  const base = size === "a4" ? { w: 1123, h: 794 } : { w: 1280, h: 720 };
+  return o === "portrait" ? { w: base.h, h: base.w } : base;
+}
+
 /* ---------- 레이아웃 스펙(PDF에서 발견·정의되는 영역/배치) ---------- */
 export type LayoutRole = "cover" | "section" | "body";
 export type AccentStyle = "none" | "bar-left" | "bar-top" | "underline" | "block";
@@ -65,6 +79,8 @@ export type Theme = {
   layouts?: LayoutSpec[];
   /** 원본 샘플 PDF의 Storage 경로(있으면 '원본 보기'로 언제든 겹쳐 비교) */
   pdfPath?: string;
+  /** 페이지 규격(크기·방향) */
+  page?: PageSpec;
   /** 빌트인(수정/삭제 불가) 여부 */
   builtin?: boolean;
 };

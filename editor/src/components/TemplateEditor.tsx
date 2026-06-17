@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { DeckView } from "@/components/slide-renderer/DeckView";
 import { RegionLayoutCanvas } from "@/components/RegionLayoutCanvas";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { FONTS, DEFAULT_SETTINGS, DEFAULT_LAYOUTS, settingsToTokens, tokensToSettings, type Theme, type TemplateSettings, type Density, type LayoutSpec, type LayoutRole, type AccentStyle, type Region, type RegionKind } from "@/lib/themes";
+import { FONTS, DEFAULT_SETTINGS, DEFAULT_LAYOUTS, DEFAULT_PAGE, pageDims, settingsToTokens, tokensToSettings, type Theme, type TemplateSettings, type Density, type LayoutSpec, type LayoutRole, type AccentStyle, type Region, type RegionKind, type PageSpec, type PageSize, type Orientation } from "@/lib/themes";
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -74,6 +74,8 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const [logs, setLogs] = useState<string[]>([]);
   const [pdfPath, setPdfPath] = useState(initial?.pdfPath ?? "");
   const [pdfDirty, setPdfDirty] = useState(false);
+  const [page, setPage] = useState<PageSpec>(initial?.page ?? DEFAULT_PAGE);
+  const dims = useMemo(() => pageDims(page), [page]);
 
   // 기존 템플릿에 저장된 원본 PDF가 있으면 불러와 '원본 보기' 가능하게
   useEffect(() => {
@@ -126,6 +128,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
       const n = Array.isArray(data.layouts) ? data.layouts.length : 0;
       if (n) { setLayouts(data.layouts); setSel(0); setSelReg(""); }
       if (data.name) setName(data.name);
+      if (data.page?.size) setPage(data.page);
       setPdfBuf(buf);
       setPdfDirty(true);
       pageCache.current.clear();
@@ -167,7 +170,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
       const res = await fetch(isUpdate ? `/api/templates/${templateId}` : "/api/templates", {
         method: isUpdate ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts, pdfPath: savedPdfPath }),
+        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts, pdfPath: savedPdfPath, page }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "저장 실패");
@@ -353,6 +356,16 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
           {/* 전역 디자인 */}
           <div className="flex flex-col gap-2.5 rounded-md border p-3">
             <div className="text-xs font-bold text-muted-foreground">전역 디자인</div>
+            <Row label="페이지 크기">
+              <select value={page.size} onChange={(e) => setPage((p) => ({ ...p, size: e.target.value as PageSize }))} className="h-8 rounded-md border bg-background px-2 text-sm">
+                <option value="16:9">16:9 (와이드)</option><option value="a4">A4 (문서)</option>
+              </select>
+            </Row>
+            <Row label="방향">
+              <select value={page.orientation} onChange={(e) => setPage((p) => ({ ...p, orientation: e.target.value as Orientation }))} className="h-8 rounded-md border bg-background px-2 text-sm">
+                <option value="landscape">가로</option><option value="portrait">세로</option>
+              </select>
+            </Row>
             <Row label="웹폰트">
               <select value={s.fontId} onChange={(e) => set("fontId", e.target.value)} className="h-8 rounded-md border bg-background px-2 text-sm">
                 {FONTS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
@@ -389,9 +402,9 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
           </div>
           <div className="min-h-0 flex-1">
             {regions.length ? (
-              <RegionLayoutCanvas spec={cur} tokens={tokens} editable selectedId={selReg} overlayUrl={overlayOn ? overlayUrl : undefined} onSelect={setSelReg} onChange={setRegions} />
+              <RegionLayoutCanvas spec={cur} tokens={tokens} editable selectedId={selReg} overlayUrl={overlayOn ? overlayUrl : undefined} dims={dims} onSelect={setSelReg} onChange={setRegions} />
             ) : (
-              <DeckView slides={[sample]} index={0} onIndexChange={() => {}} themeTokens={tokens} layouts={[cur]} />
+              <DeckView slides={[sample]} index={0} onIndexChange={() => {}} themeTokens={tokens} layouts={[cur]} dims={dims} />
             )}
           </div>
         </section>

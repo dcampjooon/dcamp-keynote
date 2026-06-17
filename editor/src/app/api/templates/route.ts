@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         name: b.name.trim(),
         description: b.desc ?? "",
         is_builtin: false,
-        theme: { tokens: b.tokens ?? {}, surround: b.surround ?? "#0a0e24", swatch: b.swatch ?? ["#2f6df6", "#14b8c4"], layouts: b.layouts ?? [], pdfPath: b.pdfPath ?? "" },
+        theme: { tokens: b.tokens ?? {}, surround: b.surround ?? "#0a0e24", swatch: b.swatch ?? ["#2f6df6", "#14b8c4"], layouts: b.layouts ?? [], pdfPath: b.pdfPath ?? "", page: b.page ?? { size: "16:9", orientation: "landscape" } },
       })
       .select("id, name, description, theme")
       .single();

@@ -6,9 +6,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { LayoutSpec, Region } from "@/lib/themes";
 
-const CW = 1280;
-const CH = 720;
-
 export function RegionLayoutCanvas({
   spec,
   tokens,
@@ -16,6 +13,7 @@ export function RegionLayoutCanvas({
   editable = false,
   selectedId,
   overlayUrl,
+  dims = { w: 1280, h: 720 },
   onSelect,
   onChange,
 }: {
@@ -25,9 +23,12 @@ export function RegionLayoutCanvas({
   editable?: boolean;
   selectedId?: string;
   overlayUrl?: string; // 원본 PDF 페이지 이미지(옅게 겹쳐 비교)
+  dims?: { w: number; h: number };
   onSelect?: (id: string) => void;
   onChange?: (regions: Region[]) => void;
 }) {
+  const CW = dims.w;
+  const CH = dims.h;
   const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const scaleRef = useRef(1);
@@ -46,7 +47,7 @@ export function RegionLayoutCanvas({
     });
     ro.observe(frame);
     return () => ro.disconnect();
-  }, []);
+  }, [CW, CH]);
 
   const regions = spec.regions ?? [];
 
@@ -92,7 +93,7 @@ export function RegionLayoutCanvas({
       <div
         ref={canvasRef}
         className="ppt-canvas"
-        style={{ ...(tokens as React.CSSProperties), background: bg, color: fg, transformOrigin: "center center" }}
+        style={{ ...(tokens as React.CSSProperties), background: bg, color: fg, width: CW, height: CH, transformOrigin: "center center" }}
         onPointerDown={() => onSelect?.("")}
       >
         {overlayUrl && (

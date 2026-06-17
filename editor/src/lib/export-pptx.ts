@@ -4,16 +4,24 @@
 import PptxGenJS from "pptxgenjs";
 import type { Block } from "@/lib/slide-schema";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { layoutForSlide, DEFAULT_LAYOUTS, type LayoutSpec } from "@/lib/themes";
+import { layoutForSlide, pageDims, DEFAULT_LAYOUTS, DEFAULT_PAGE, type LayoutSpec, type PageSpec } from "@/lib/themes";
 
-// 16:9 = 13.333 x 7.5 inch. 캔버스 1280x720 → inch 스케일
-const SLIDE_W = 13.333;
-const SLIDE_H = 7.5;
-const S = SLIDE_W / 1280; // inch per px (가로·세로 동일)
-const MX = 80 * S; // 좌우 여백(px 80)
-const MY = 64 * S; // 상하 여백(px 64)
-const CW = SLIDE_W - 2 * MX; // 콘텐츠 폭
+// 페이지 규격에 따라 요청당 설정되는 슬라이드 치수(inch)와 px→inch 스케일
+let SLIDE_W = 13.333;
+let SLIDE_H = 7.5;
+let S = SLIDE_W / 1280; // inch per px
+let MX = 80 * S; // 좌우 여백(px 80)
+let MY = 64 * S; // 상하 여백(px 64)
+let CW = SLIDE_W - 2 * MX; // 콘텐츠 폭
 let FONT = "Malgun Gothic"; // 테마 폰트로 요청당 설정(PPTX는 뷰어 설치 폰트 기준 — 한글 안전 폴백)
+
+/** 페이지 inch 치수(크기·방향). */
+function pageInches(page?: PageSpec): { w: number; h: number } {
+  const size = page?.size ?? "16:9";
+  const o = page?.orientation ?? "landscape";
+  const base = size === "a4" ? { w: 11.69, h: 8.27 } : { w: 13.333, h: 7.5 };
+  return o === "portrait" ? { w: base.h, h: base.w } : base;
+}
 
 const HEX: Record<string, string> = { blue: "2f6df6", cyan: "14b8c4", green: "16a34a", purple: "7c3aed", amber: "d97706", gray: "64748b" };
 const INK = "16233d", INK_DIM = "5b6b86", INK_FAINT = "9aa7bd", LINE = "b9c4da";
@@ -234,12 +242,22 @@ function addCentered(s: Slide, b: Block, x: number, y: number, w: number, h: num
   s.addText(text, { x, y, w, h, fontFace: FONT, fontSize: pt(fs), bold: b.type !== "paragraph", color: b.type === "paragraph" ? INK_DIM : INK, align: "center", valign: "top" });
 }
 
-export async function buildPptx(title: string, slides: RenderSlide[], accentHex?: string, fontFace?: string, layouts?: LayoutSpec[]): Promise<Buffer> {
+export async function buildPptx(title: string, slides: RenderSlide[], accentHex?: string, fontFace?: string, layouts?: LayoutSpec[], page?: PageSpec): Promise<Buffer> {
   ACCENT = (accentHex || HEX.blue).replace(/^#/, "");
   FONT = fontFace || "Malgun Gothic";
   const specs = layouts && layouts.length ? layouts : DEFAULT_LAYOUTS;
+  // 페이지 규격에 맞춰 슬라이드 치수·스케일 설정
+  const inch = pageInches(page ?? DEFAULT_PAGE);
+  const d = pageDims(page ?? DEFAULT_PAGE);
+  SLIDE_W = inch.w;
+  SLIDE_H = inch.h;
+  S = SLIDE_W / d.w;
+  MX = 80 * S;
+  MY = 64 * S;
+  CW = SLIDE_W - 2 * MX;
   const pptx = new PptxGenJS();
-  pptx.layout = "LAYOUT_WIDE"; // 13.333 x 7.5
+  pptx.defineLayout({ name: "PAGE", width: SLIDE_W, height: SLIDE_H });
+  pptx.layout = "PAGE";
   pptx.title = title;
   for (const sl of slides) layoutSlide(pptx, sl, layoutForSlide(sl.layout, specs));
   return (await pptx.write({ outputType: "nodebuffer" })) as Buffer;

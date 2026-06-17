@@ -14,7 +14,7 @@ import { StorylineBoard } from "@/components/StorylineBoard";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import type { Outline } from "@/lib/slide-schema";
 import { SEED_SLIDES } from "@/lib/seed-deck";
-import { THEMES, DEFAULT_THEME, type Theme } from "@/lib/themes";
+import { THEMES, DEFAULT_THEME, pageDims, type Theme } from "@/lib/themes";
 
 type Stage = "idle" | "outlining" | "storyline" | "generating" | "ready";
 
@@ -276,7 +276,7 @@ export default function EditorPage() {
             <StorylineBoard outline={outline} onChange={setOutline} />
           ) : slides.length > 0 ? (
             <div className="flex h-full flex-col p-6">
-              <DeckView slides={slides} index={index} onIndexChange={setIndex} editable={editMode} themeTokens={theme.tokens} layouts={theme.layouts} onBlockPatch={editBlock} onTitleCommit={editTitle} />
+              <DeckView slides={slides} index={index} onIndexChange={setIndex} editable={editMode} themeTokens={theme.tokens} layouts={theme.layouts} dims={pageDims(theme.page)} onBlockPatch={editBlock} onTitleCommit={editTitle} />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">

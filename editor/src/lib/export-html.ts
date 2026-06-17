@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Block } from "@/lib/slide-schema";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { DEFAULT_THEME, DEFAULT_LAYOUTS, FONTS, layoutForSlide, type LayoutSpec, type Theme } from "@/lib/themes";
+import { DEFAULT_THEME, DEFAULT_LAYOUTS, FONTS, layoutForSlide, pageDims, type LayoutSpec, type Theme } from "@/lib/themes";
 import { sanitizeSvg } from "@/lib/sanitize-svg";
 
 async function themeCss(): Promise<string> {
@@ -194,7 +194,7 @@ const RUNTIME_JS = `
   var cur=0;
   slides.forEach(function(_,i){var d=document.createElement('i');d.onclick=function(e){e.stopPropagation();go(i)};dotsWrap.appendChild(d)});
   var dots=[].slice.call(dotsWrap.children);
-  function scale(){var s=Math.min(window.innerWidth/1280,(window.innerHeight-56)/720);deck.style.transform='scale('+s+')';}
+  function scale(){var s=Math.min(window.innerWidth/CW,(window.innerHeight-56)/CH);deck.style.transform='scale('+s+')';}
   function countup(slide){slide.querySelectorAll('.num[data-to]').forEach(function(el){var to=+el.getAttribute('data-to');var suf=el.getAttribute('data-suffix')||'';var t0=performance.now();function tick(now){var p=Math.min(1,(now-t0)/1100);var e=1-Math.pow(1-p,3);el.textContent=Math.round(to*e).toLocaleString()+suf;if(p<1)requestAnimationFrame(tick);}requestAnimationFrame(tick);});}
   function go(n){if(n<0||n>=slides.length)return;slides[cur].classList.remove('active');cur=n;var s=slides[cur];s.classList.add('active');dots.forEach(function(d,i){d.classList.toggle('on',i===cur)});pager.textContent=('0'+(cur+1)).slice(-2)+' / '+('0'+slides.length).slice(-2);countup(s);if((parseInt(location.hash.slice(1),10)||0)!==cur+1)history.replaceState(null,'','#'+(cur+1));}
   window.addEventListener('resize',scale);scale();
@@ -208,10 +208,12 @@ const RUNTIME_JS = `
 export async function buildExportHtml(title: string, slides: RenderSlide[], theme: Theme = DEFAULT_THEME): Promise<string> {
   const css = await themeCss();
   const layouts: LayoutSpec[] = theme.layouts && theme.layouts.length ? theme.layouts : DEFAULT_LAYOUTS;
+  const dims = pageDims(theme.page);
   const slidesMarkup = slides.map((s, i) => renderSlide(s, i, slides.length, layouts)).join("\n");
-  const tokenStyle = Object.entries(theme.tokens)
-    .map(([k, v]) => `${k}:${v}`)
-    .join(";");
+  const tokenStyle =
+    Object.entries(theme.tokens)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(";") + `;--cw:${dims.w}px;--ch:${dims.h}px`;
   const fontUrl = FONTS.find((f) => f.stack === theme.tokens["--font"])?.url || "";
   const fontLink = fontUrl ? `<link rel="stylesheet" href="${fontUrl}" />` : "";
   return `<!doctype html>
@@ -237,7 +239,7 @@ ${slidesMarkup}
 </div>
 <div class="export-bar"><span id="pager"></span><div id="dots"></div></div>
 <div class="export-hint">← → · Space · F 전체화면</div>
-<script>${RUNTIME_JS}</script>
+<script>var CW=${dims.w},CH=${dims.h};${RUNTIME_JS}</script>
 </body>
 </html>`;
 }

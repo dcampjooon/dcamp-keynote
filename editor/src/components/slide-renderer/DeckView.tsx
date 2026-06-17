@@ -15,6 +15,7 @@ export function DeckView({
   editable = false,
   themeTokens,
   layouts,
+  dims = { w: 1280, h: 720 },
   onBlockPatch,
   onTitleCommit,
 }: {
@@ -24,6 +25,7 @@ export function DeckView({
   editable?: boolean;
   themeTokens?: Record<string, string>;
   layouts?: LayoutSpec[];
+  dims?: { w: number; h: number };
   onBlockPatch?: (blockId: string, partial: BlockPatch) => void;
   onTitleCommit?: (text: string) => void;
 }) {
@@ -36,12 +38,12 @@ export function DeckView({
     if (!frame || !canvas) return;
     const ro = new ResizeObserver(() => {
       const { width, height } = frame.getBoundingClientRect();
-      const scale = Math.min(width / 1280, height / 720);
+      const scale = Math.min(width / dims.w, height / dims.h);
       canvas.style.transform = `scale(${scale})`;
     });
     ro.observe(frame);
     return () => ro.disconnect();
-  }, []);
+  }, [dims.w, dims.h]);
 
   const go = useCallback(
     (n: number) => {
@@ -69,7 +71,7 @@ export function DeckView({
   return (
     <div className="flex h-full min-w-0 flex-col gap-3">
       <div ref={frameRef} className="ppt-frame relative min-w-0 flex-1 overflow-hidden">
-        <div ref={canvasRef} className="ppt-canvas play" style={themeTokens as React.CSSProperties}>
+        <div ref={canvasRef} className="ppt-canvas play" style={{ ...(themeTokens as React.CSSProperties), width: dims.w, height: dims.h }}>
           {current && (
             <SlideView
               key={index}

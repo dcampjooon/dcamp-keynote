@@ -41,6 +41,8 @@ const Layout = z.object({
 const Analysis = z.object({
   name: z.string().describe("이 디자인을 잘 나타내는 짧은 템플릿 이름"),
   rationale: z.string().describe("어떤 디자인 특징을 반영했는지 한 문장"),
+  pageSize: z.enum(["16:9", "a4"]).default("16:9").describe("페이지 비율: 와이드 화면이면 16:9, A4 문서 비율이면 a4"),
+  orientation: z.enum(["landscape", "portrait"]).default("landscape").describe("페이지 방향: 가로면 landscape, 세로면 portrait"),
   accent1: z.string().describe("주 강조색 hex (#RRGGBB)"),
   accent2: z.string().describe("보조 강조색 hex"),
   ink: z.string().describe("기본 본문 텍스트 색 hex"),
@@ -101,7 +103,8 @@ export async function POST(request: Request) {
     const parsed = Analysis.safeParse(tu.input);
     if (!parsed.success) return Response.json({ error: "분석 결과 형식 오류", detail: parsed.error.issues }, { status: 502 });
 
-    const { name, rationale, layouts: rawLayouts, ...settings } = parsed.data;
+    const { name, rationale, layouts: rawLayouts, pageSize, orientation, ...settings } = parsed.data;
+    const page = { size: pageSize, orientation };
     const roleCount: Record<string, number> = {};
     const layouts = rawLayouts.map((l) => {
       const n = (roleCount[l.role] = (roleCount[l.role] ?? 0) + 1);
@@ -109,7 +112,7 @@ export async function POST(request: Request) {
       const regions = (l.regions ?? []).map((r, ri) => ({ ...r, id: `${id}-r${ri}` }));
       return { ...l, columns: (l.columns >= 2 ? 2 : 1) as 1 | 2, id, regions };
     });
-    return Response.json({ name, rationale, settings, layouts });
+    return Response.json({ name, rationale, settings, layouts, page });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return Response.json({ error: message }, { status: 500 });
