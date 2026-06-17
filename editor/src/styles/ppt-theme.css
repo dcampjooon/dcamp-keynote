@@ -25,10 +25,11 @@
   --amber: #d97706;
   --gray: #64748b;
   --grad: linear-gradient(120deg, #2f6df6, #14b8c4);
+  --canvas-bg: #fff;
   position: relative;
   width: 1280px;
   height: 720px;
-  background: #fff;
+  background: var(--canvas-bg);
   color: var(--ink);
   border-radius: 14px;
   box-shadow: 0 24px 70px -28px rgba(20, 35, 70, 0.45);

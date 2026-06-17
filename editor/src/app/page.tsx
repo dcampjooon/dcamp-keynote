@@ -12,6 +12,7 @@ import { DeckView } from "@/components/slide-renderer/DeckView";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import type { Outline } from "@/lib/slide-schema";
 import { SEED_SLIDES } from "@/lib/seed-deck";
+import { THEMES, themeById } from "@/lib/themes";
 
 type Stage = "idle" | "outlining" | "outline" | "generating" | "ready";
 
@@ -26,6 +27,7 @@ export default function Home() {
   const [editMode, setEditMode] = useState(false);
   const [patchInput, setPatchInput] = useState("");
   const [patching, setPatching] = useState(false);
+  const [themeId, setThemeId] = useState("dcamp-white");
 
   // 개발용: 생성된 덱 JSON을 콘솔/자동화로 주입해 렌더 확인 (window.__loadSlides(arr))
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function Home() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ outline }),
+        body: JSON.stringify({ outline, themeId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "슬라이드 생성 실패");
@@ -180,6 +182,23 @@ export default function Home() {
               rows={4}
               disabled={stage === "outlining"}
             />
+            <div>
+              <label className="text-sm font-medium">템플릿</label>
+              <div className="mt-2 grid grid-cols-5 gap-1.5">
+                {THEMES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setThemeId(t.id)}
+                    disabled={stage === "outlining"}
+                    title={`${t.name} · ${t.desc}`}
+                    className={`flex flex-col items-center gap-1 rounded-md border p-1.5 transition ${themeId === t.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-muted-foreground/40"}`}
+                  >
+                    <span className="h-5 w-full rounded" style={{ background: `linear-gradient(120deg, ${t.swatch[0]}, ${t.swatch[1]})` }} />
+                    <span className="text-[10px] leading-tight text-muted-foreground">{t.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <Button onClick={makeOutline} disabled={stage === "outlining" || !brief.trim()}>
               {stage === "outlining" ? "기획 설계 중…" : "기획 시작"}
             </Button>
@@ -294,6 +313,7 @@ export default function Home() {
             index={index}
             onIndexChange={setIndex}
             editable={editMode}
+            themeTokens={themeById(themeId).tokens}
             onBlockPatch={editBlock}
             onTitleCommit={editTitle}
           />

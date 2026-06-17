@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import type { Block } from "@/lib/slide-schema";
 import { Diagram } from "./Diagram";
 import { Editable } from "./Editable";
+import { sanitizeSvg } from "@/lib/sanitize-svg";
 
 /** 헤드라인의 accent 부분을 그라데이션 강조로 감싼다(보기 모드 전용). */
 function Highlighted({ text, accent }: { text: string; accent: string }) {
@@ -166,6 +167,8 @@ export function BlockView({
           </div>
         </div>
       );
+    case "freecanvas":
+      return <div className="ppt-svgwrap" {...anim} dangerouslySetInnerHTML={{ __html: sanitizeSvg(block.svg) }} />;
     default:
       return null;
   }

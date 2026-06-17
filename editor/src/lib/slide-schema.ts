@@ -50,6 +50,7 @@ export const Block = z.discriminatedUnion("type", [
     edges: z.array(DiagramEdge).max(12),
   }),
   z.object({ ...Base, type: z.literal("image"), prompt: z.string().default("").describe("AI 이미지 생성 프롬프트(현재는 자리표시자)"), url: z.string().default("") }),
+  z.object({ ...Base, type: z.literal("freecanvas"), svg: z.string().describe("커스텀 비주얼 SVG 마크업(<svg>…</svg>). 스크립트·이벤트핸들러·foreignObject 금지. SVG 애니메이션은 허용") }),
 ]);
 export type Block = z.infer<typeof Block>;
 

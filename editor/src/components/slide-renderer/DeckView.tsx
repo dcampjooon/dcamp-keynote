@@ -12,6 +12,7 @@ export function DeckView({
   index,
   onIndexChange,
   editable = false,
+  themeTokens,
   onBlockPatch,
   onTitleCommit,
 }: {
@@ -19,6 +20,7 @@ export function DeckView({
   index: number;
   onIndexChange: (i: number) => void;
   editable?: boolean;
+  themeTokens?: Record<string, string>;
   onBlockPatch?: (blockId: string, partial: BlockPatch) => void;
   onTitleCommit?: (text: string) => void;
 }) {
@@ -64,7 +66,7 @@ export function DeckView({
   return (
     <div className="flex h-full min-w-0 flex-col gap-3">
       <div ref={frameRef} className="ppt-frame relative min-w-0 flex-1 overflow-hidden">
-        <div ref={canvasRef} className="ppt-canvas play">
+        <div ref={canvasRef} className="ppt-canvas play" style={themeTokens as React.CSSProperties}>
           {current && (
             <SlideView key={index} slide={current} editable={editable} onBlockPatch={onBlockPatch} onTitleCommit={onTitleCommit} />
           )}

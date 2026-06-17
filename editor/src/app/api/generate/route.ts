@@ -20,11 +20,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "유효한 아웃라인이 아닙니다.", detail: parsed.error.issues }, { status: 400 });
     }
     const outline = parsed.data;
+    const themeId = typeof body.themeId === "string" ? body.themeId : "dcamp-white";
 
     // 1) 덱 생성
     const { data: deck, error: deckErr } = await supabaseAdmin
       .from("decks")
-      .insert({ owner: DEV_USER_ID, title: outline.title || "제목 없는 발표", status: "generating" })
+      .insert({ owner: DEV_USER_ID, title: outline.title || "제목 없는 발표", status: "generating", theme: { id: themeId } })
       .select()
       .single();
     if (deckErr || !deck) {
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     await supabaseAdmin.from("decks").update({ status: "ready" }).eq("id", deck.id);
     await supabaseAdmin.from("ai_jobs").update({ status: "succeeded", output: { count: slides.length } }).eq("id", job?.id);
 
-    return Response.json({ deckId: deck.id, title: outline.title, subtitle: outline.subtitle, slides });
+    return Response.json({ deckId: deck.id, title: outline.title, subtitle: outline.subtitle, themeId, slides });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return Response.json({ error: message }, { status: 500 });

@@ -35,7 +35,9 @@ export const PATCH_SYSTEM = `${TONE}
 - update: 기존 블록 1개를 통째로 교체(blockId는 기존 id 그대로, block.id도 같게)
 - insert: 새 블록 추가(afterBlockId 뒤에, 비우면 맨 끝). block.id는 새 슬러그
 - delete: 블록 제거
-요청과 무관한 블록은 건드리지 마라. reply에는 무엇을 바꿨는지 한 문장으로 적어라.`;
+요청과 무관한 블록은 건드리지 마라. reply에는 무엇을 바꿨는지 한 문장으로 적어라.
+사용자가 "직접 그려/커스텀 비주얼/특수한 도형" 등을 명시적으로 요청할 때만 freecanvas 블록(svg)을 쓸 수 있다.
+SVG는 <svg viewBox=...>로 시작하고 스크립트·이벤트핸들러·foreignObject를 넣지 마라(애니메이션 <animate>는 허용). 평범한 도식은 기존 diagram 블록을 우선한다.`;
 
 /** 발표 전체 맥락을 슬라이드 생성 호출에 압축해 전달(캐시 친화적으로 앞쪽 고정). */
 export function deckContext(title: string, storyline: string, planSummaries: string[]): string {

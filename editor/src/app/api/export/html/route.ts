@@ -4,13 +4,14 @@
 import { buildExportHtml } from "@/lib/export-html";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import { supabaseAdmin } from "@/lib/supabase";
+import { themeById } from "@/lib/themes";
 
 export async function GET(request: Request) {
   try {
     const deckId = new URL(request.url).searchParams.get("deckId");
     if (!deckId) return Response.json({ error: "deckId가 필요합니다." }, { status: 400 });
 
-    const { data: deck } = await supabaseAdmin.from("decks").select("title").eq("id", deckId).single();
+    const { data: deck } = await supabaseAdmin.from("decks").select("title, theme").eq("id", deckId).single();
     const { data: rows, error } = await supabaseAdmin
       .from("slides")
       .select("id, version, layout, title, blocks, notes")
@@ -22,7 +23,8 @@ export async function GET(request: Request) {
     }
 
     const title = deck?.title || "발표";
-    const html = await buildExportHtml(title, rows as unknown as RenderSlide[]);
+    const theme = themeById((deck?.theme as { id?: string } | null)?.id);
+    const html = await buildExportHtml(title, rows as unknown as RenderSlide[], theme);
 
     const filename = `${title.replace(/[^\p{L}\p{N}\-_]+/gu, "_").slice(0, 40) || "deck"}.html`;
     return new Response(html, {

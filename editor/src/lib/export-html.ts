@@ -5,6 +5,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Block } from "@/lib/slide-schema";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
+import { DEFAULT_THEME, type Theme } from "@/lib/themes";
+import { sanitizeSvg } from "@/lib/sanitize-svg";
 
 async function themeCss(): Promise<string> {
   return readFile(path.join(process.cwd(), "src/styles/ppt-theme.css"), "utf8");
@@ -122,6 +124,8 @@ function renderBlock(block: Block, delay: number, slideIdx: number, blockIdx: nu
       return `<div class="ppt-svgwrap" ${anim}>${renderDiagram(block, `d${slideIdx}_${blockIdx}_`)}</div>`;
     case "image":
       return `<div class="ppt-svgwrap" ${anim}><div style="width:100%;height:100%;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px">🖼 ${esc(block.prompt || "이미지")}</div></div>`;
+    case "freecanvas":
+      return `<div class="ppt-svgwrap" ${anim}>${sanitizeSvg(block.svg)}</div>`;
     default:
       return "";
   }
@@ -185,9 +189,12 @@ const RUNTIME_JS = `
 })();
 `;
 
-export async function buildExportHtml(title: string, slides: RenderSlide[]): Promise<string> {
+export async function buildExportHtml(title: string, slides: RenderSlide[], theme: Theme = DEFAULT_THEME): Promise<string> {
   const css = await themeCss();
   const slidesMarkup = slides.map((s, i) => renderSlide(s, i)).join("\n");
+  const tokenStyle = Object.entries(theme.tokens)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(";");
   return `<!doctype html>
 <html lang="ko">
 <head>
@@ -199,11 +206,12 @@ export async function buildExportHtml(title: string, slides: RenderSlide[]): Pro
 <style>
 ${css}
 ${LAYOUT_CSS}
+html,body{background:${theme.surround} !important}
 </style>
 </head>
 <body>
 <div class="export-stage" id="stage">
-  <div class="ppt-canvas play" id="deck">
+  <div class="ppt-canvas play" id="deck" style="${tokenStyle}">
 ${slidesMarkup}
   </div>
 </div>
