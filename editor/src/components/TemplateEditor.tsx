@@ -1,5 +1,5 @@
-// ABOUTME: 템플릿(테마) 에디터. 색·폰트·word-break·라운드·여백 밀도·표지/간지/본문 헤드라인 크기를 세세히 설정하고 실시간 미리보기로 확인 후 저장.
-// ABOUTME: 모든 설정은 CSS 토큰으로 변환되어 미리보기·HTML·PPTX 익스포트에 동일 적용된다. 빌트인은 읽기전용(복제만).
+// ABOUTME: 템플릿 에디터. 샘플 PDF를 분석해 '레이아웃들(표지/간지/본문 등)'과 전역 디자인(색·폰트·여백)을 채우고, 레이아웃별로 영역/배치를 세세히 편집·미리보기 후 저장.
+// ABOUTME: 고정 프리셋이 아니라 PDF에서 발견된(또는 직접 추가한) 레이아웃이 기준. 각 레이아웃을 데이터로 정의하면 렌더러가 그대로 그린다.
 
 "use client";
 
@@ -10,8 +10,8 @@ import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DeckView } from "@/components/slide-renderer/DeckView";
-import { SEED_SLIDES } from "@/lib/seed-deck";
-import { FONTS, DEFAULT_SETTINGS, settingsToTokens, tokensToSettings, type Theme, type TemplateSettings, type Density } from "@/lib/themes";
+import type { RenderSlide } from "@/components/slide-renderer/SlideView";
+import { FONTS, DEFAULT_SETTINGS, DEFAULT_LAYOUTS, settingsToTokens, tokensToSettings, type Theme, type TemplateSettings, type Density, type LayoutSpec, type LayoutRole, type AccentStyle } from "@/lib/themes";
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -24,28 +24,50 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
     </label>
   );
 }
-
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return <label className="flex items-center justify-between gap-3 text-sm"><span className="text-muted-foreground">{label}</span>{children}</label>;
+}
+function ToggleColor({ label, value, fallback, onChange }: { label: string; value: string; fallback: string; onChange: (v: string) => void }) {
+  const on = !!value;
   return (
-    <label className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      {children}
-    </label>
+    <Row label={label}>
+      <span className="flex items-center gap-2">
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked ? fallback : "")} className="size-4" />
+        <input type="color" value={on ? value : fallback} disabled={!on} onChange={(e) => onChange(e.target.value)} className="h-8 w-9 cursor-pointer rounded border disabled:opacity-40" />
+      </span>
+    </Row>
   );
+}
+
+const ROLE_LABEL: Record<LayoutRole, string> = { cover: "표지", section: "간지", body: "본문" };
+const ACCENTS: AccentStyle[] = ["none", "bar-top", "bar-left", "underline", "block"];
+const ACCENT_LABEL: Record<AccentStyle, string> = { none: "없음", "bar-top": "가로 바", "bar-left": "세로 바", underline: "밑줄", block: "블록" };
+
+function sampleForRole(role: LayoutRole): RenderSlide {
+  if (role === "cover")
+    return { layout: "title", title: "발표 제목 예시", notes: "", blocks: [{ id: "s", type: "subhead", text: "부제 — 한 줄 설명", column: "full", anim: "fade" }] };
+  if (role === "section")
+    return { layout: "section", title: "섹션 제목 예시", notes: "", blocks: [] };
+  return {
+    layout: "standard", title: "본문 헤드라인 예시", notes: "",
+    blocks: [{ id: "b", type: "bullets", column: "full", anim: "rise", items: ["핵심 포인트 하나", "핵심 포인트 둘", "핵심 포인트 셋"] }],
+  };
 }
 
 export function TemplateEditor({ initial, templateId }: { initial?: Theme; templateId?: string }) {
   const router = useRouter();
   const readOnly = !!initial?.builtin;
-  const init = initial ? tokensToSettings(initial.tokens, initial.surround) : DEFAULT_SETTINGS;
   const [name, setName] = useState(initial ? (readOnly ? `${initial.name} 복사본` : initial.name) : "새 템플릿");
-  const [s, setS] = useState<TemplateSettings>(init);
-  const [previewIdx, setPreviewIdx] = useState(0);
+  const [s, setS] = useState<TemplateSettings>(initial ? tokensToSettings(initial.tokens, initial.surround) : DEFAULT_SETTINGS);
+  const [layouts, setLayouts] = useState<LayoutSpec[]>(initial?.layouts?.length ? initial.layouts : DEFAULT_LAYOUTS);
+  const [sel, setSel] = useState(0);
+  const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof TemplateSettings>(k: K, v: TemplateSettings[K]) => setS((p) => ({ ...p, [k]: v }));
   const tokens = useMemo(() => settingsToTokens(s), [s]);
-  const [analyzing, setAnalyzing] = useState(false);
+  const cur = layouts[Math.min(sel, layouts.length - 1)] ?? DEFAULT_LAYOUTS[0];
+  const setLayout = (patch: Partial<LayoutSpec>) => setLayouts((ls) => ls.map((l, i) => (i === sel ? { ...l, ...patch } : l)));
 
   async function analyzePdf(file: File) {
     setAnalyzing(true);
@@ -56,13 +78,24 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "분석 실패");
       setS((prev) => ({ ...prev, ...data.settings }));
+      if (Array.isArray(data.layouts) && data.layouts.length) { setLayouts(data.layouts); setSel(0); }
       if (data.name) setName(data.name);
-      toast.success(data.rationale ? `분석 완료 — ${data.rationale}` : "디자인을 분석해 적용했습니다.");
+      toast.success(data.rationale ? `분석 완료 — ${data.rationale}` : "PDF 디자인을 템플릿으로 가져왔습니다.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "오류");
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  function addLayout() {
+    setLayouts((ls) => [...ls, { ...DEFAULT_LAYOUTS[2], id: `body-${ls.length + 1}`, name: "새 레이아웃" }]);
+    setSel(layouts.length);
+  }
+  function removeLayout(i: number) {
+    if (layouts.length <= 1) return;
+    setLayouts((ls) => ls.filter((_, k) => k !== i));
+    setSel(0);
   }
 
   async function save() {
@@ -73,7 +106,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
       const res = await fetch(isUpdate ? `/api/templates/${templateId}` : "/api/templates", {
         method: isUpdate ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2] }),
+        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "저장 실패");
@@ -87,17 +120,12 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
     }
   }
 
-  const previews = [
-    { i: 0, label: "표지" },
-    { i: 1, label: "강조" },
-    { i: 2, label: "2단" },
-    { i: 3, label: "본문" },
-  ];
+  const sample = sampleForRole(cur.role);
 
   return (
     <>
       <Toaster richColors position="top-center" />
-      <main className="grid h-screen grid-cols-[380px_1fr] overflow-hidden">
+      <main className="grid h-screen grid-cols-[400px_1fr] overflow-hidden">
         <aside className="flex h-full flex-col gap-4 overflow-y-auto border-r bg-card p-5">
           <div className="flex items-center gap-2">
             <Link href="/templates" className="rounded-md border px-2.5 py-1 text-sm hover:bg-accent">← 템플릿</Link>
@@ -105,10 +133,10 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
           </div>
           {readOnly && <div className="rounded-md bg-muted p-2.5 text-xs text-muted-foreground">빌트인 템플릿입니다. 값을 바꿔 새 템플릿으로 저장하세요.</div>}
 
-          {/* 샘플 PDF에서 디자인 분석 */}
+          {/* PDF 분석 */}
           <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
-            <div className="text-xs font-bold text-primary">샘플 PDF로 디자인 가져오기</div>
-            <p className="text-xs text-muted-foreground">잘 만든 발표 PDF를 올리면 여백·색·타이포·모서리 등 공통 디자인을 분석해 아래 설정을 채웁니다.</p>
+            <div className="text-xs font-bold text-primary">샘플 PDF로 템플릿 만들기</div>
+            <p className="text-xs text-muted-foreground">잘 만든 발표 PDF를 올리면 레이아웃(표지·간지·본문)과 색·폰트·여백을 분석해 아래를 채웁니다.</p>
             <label className="inline-flex cursor-pointer items-center justify-center rounded-md border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
               {analyzing ? "분석 중…" : "📄 PDF 업로드 분석"}
               <input type="file" accept="application/pdf" className="hidden" disabled={analyzing}
@@ -121,68 +149,87 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="템플릿 이름" />
           </div>
 
-          {/* 타이포그래피 */}
+          {/* 레이아웃 목록 */}
           <div className="flex flex-col gap-2.5 rounded-md border p-3">
-            <div className="text-xs font-bold text-muted-foreground">타이포그래피</div>
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-bold text-muted-foreground">레이아웃 ({layouts.length})</div>
+              <button className="text-xs text-primary hover:underline" onClick={addLayout}>+ 추가</button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {layouts.map((l, i) => (
+                <button key={l.id + i} onClick={() => setSel(i)}
+                  className={`rounded-md border px-2.5 py-1 text-xs ${i === sel ? "border-primary bg-primary/10 font-semibold" : "hover:border-muted-foreground/40"}`}>
+                  {l.name || ROLE_LABEL[l.role]}
+                </button>
+              ))}
+            </div>
+
+            {/* 선택 레이아웃 편집 */}
+            <div className="mt-1 flex flex-col gap-2 border-t pt-2.5">
+              <Row label="이름"><Input value={cur.name} onChange={(e) => setLayout({ name: e.target.value })} className="h-8 w-40 text-sm" /></Row>
+              <Row label="종류">
+                <select value={cur.role} onChange={(e) => setLayout({ role: e.target.value as LayoutRole })} className="h-8 rounded-md border bg-background px-2 text-sm">
+                  {(["cover", "section", "body"] as LayoutRole[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+                </select>
+              </Row>
+              <ToggleColor label="배경색 지정" value={cur.bg} fallback={s.surround} onChange={(v) => setLayout({ bg: v })} />
+              <ToggleColor label="텍스트색 지정" value={cur.fg} fallback="#ffffff" onChange={(v) => setLayout({ fg: v })} />
+              <Row label="가로 정렬">
+                <select value={cur.align} onChange={(e) => setLayout({ align: e.target.value as "left" | "center" })} className="h-8 rounded-md border bg-background px-2 text-sm">
+                  <option value="left">왼쪽</option><option value="center">가운데</option>
+                </select>
+              </Row>
+              <Row label="세로 위치">
+                <select value={cur.vAlign} onChange={(e) => setLayout({ vAlign: e.target.value as "top" | "middle" })} className="h-8 rounded-md border bg-background px-2 text-sm">
+                  <option value="top">상단</option><option value="middle">중앙</option>
+                </select>
+              </Row>
+              <Row label={`제목 크기 ${cur.titleSize}px`}><input type="range" min={24} max={84} value={cur.titleSize} onChange={(e) => setLayout({ titleSize: +e.target.value })} /></Row>
+              <Row label="강조 요소">
+                <select value={cur.accent} onChange={(e) => setLayout({ accent: e.target.value as AccentStyle })} className="h-8 rounded-md border bg-background px-2 text-sm">
+                  {ACCENTS.map((a) => <option key={a} value={a}>{ACCENT_LABEL[a]}</option>)}
+                </select>
+              </Row>
+              <Row label="상단 브랜드"><input type="checkbox" checked={cur.kicker} onChange={(e) => setLayout({ kicker: e.target.checked })} className="size-4" /></Row>
+              <Row label="하단 푸터/페이지번호"><input type="checkbox" checked={cur.footer} onChange={(e) => setLayout({ footer: e.target.checked })} className="size-4" /></Row>
+              <Row label="본문 컬럼">
+                <select value={cur.columns} onChange={(e) => setLayout({ columns: (+e.target.value === 2 ? 2 : 1) as 1 | 2 })} className="h-8 rounded-md border bg-background px-2 text-sm">
+                  <option value={1}>1단</option><option value={2}>2단</option>
+                </select>
+              </Row>
+              {layouts.length > 1 && <button className="self-start text-xs text-destructive hover:underline" onClick={() => removeLayout(sel)}>이 레이아웃 삭제</button>}
+            </div>
+          </div>
+
+          {/* 전역 디자인 */}
+          <div className="flex flex-col gap-2.5 rounded-md border p-3">
+            <div className="text-xs font-bold text-muted-foreground">전역 디자인</div>
             <Row label="웹폰트">
               <select value={s.fontId} onChange={(e) => set("fontId", e.target.value)} className="h-8 rounded-md border bg-background px-2 text-sm">
                 {FONTS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
               </select>
             </Row>
-            <Row label="한글 잘림 방지 (keep-all)">
-              <input type="checkbox" checked={s.keepAll} onChange={(e) => set("keepAll", e.target.checked)} className="size-4" />
-            </Row>
-            <Row label={`표지 헤드라인 ${s.titleSize}px`}>
-              <input type="range" min={36} max={84} value={s.titleSize} onChange={(e) => set("titleSize", +e.target.value)} />
-            </Row>
-            <Row label={`간지 헤드라인 ${s.sectionSize}px`}>
-              <input type="range" min={32} max={72} value={s.sectionSize} onChange={(e) => set("sectionSize", +e.target.value)} />
-            </Row>
-            <Row label={`본문 헤드라인 ${s.bodySize}px`}>
-              <input type="range" min={28} max={56} value={s.bodySize} onChange={(e) => set("bodySize", +e.target.value)} />
-            </Row>
-          </div>
-
-          {/* 레이아웃 */}
-          <div className="flex flex-col gap-2.5 rounded-md border p-3">
-            <div className="text-xs font-bold text-muted-foreground">레이아웃</div>
-            <Row label={`모서리 라운드 ${s.radius}px`}>
-              <input type="range" min={0} max={28} value={s.radius} onChange={(e) => set("radius", +e.target.value)} />
-            </Row>
+            <Row label="한글 잘림 방지"><input type="checkbox" checked={s.keepAll} onChange={(e) => set("keepAll", e.target.checked)} className="size-4" /></Row>
+            <Row label={`모서리 라운드 ${s.radius}px`}><input type="range" min={0} max={28} value={s.radius} onChange={(e) => set("radius", +e.target.value)} /></Row>
             <Row label="여백 밀도">
               <select value={s.density} onChange={(e) => set("density", e.target.value as Density)} className="h-8 rounded-md border bg-background px-2 text-sm">
-                <option value="compact">좁게</option>
-                <option value="normal">보통</option>
-                <option value="roomy">넓게</option>
+                <option value="compact">좁게</option><option value="normal">보통</option><option value="roomy">넓게</option>
               </select>
             </Row>
-          </div>
-
-          {/* 색 */}
-          <div className="flex flex-col gap-2.5 rounded-md border p-3">
-            <div className="text-xs font-bold text-muted-foreground">색</div>
-            <ColorField label="액센트 1 (메인)" value={s.accent1} onChange={(v) => set("accent1", v)} />
-            <ColorField label="액센트 2 (보조)" value={s.accent2} onChange={(v) => set("accent2", v)} />
-            <ColorField label="본문 텍스트" value={s.ink} onChange={(v) => set("ink", v)} />
-            <ColorField label="슬라이드 배경" value={s.canvasBg} onChange={(v) => set("canvasBg", v)} />
+            <ColorField label="액센트 1" value={s.accent1} onChange={(v) => set("accent1", v)} />
+            <ColorField label="액센트 2" value={s.accent2} onChange={(v) => set("accent2", v)} />
+            <ColorField label="기본 본문 텍스트" value={s.ink} onChange={(v) => set("ink", v)} />
+            <ColorField label="기본 슬라이드 배경" value={s.canvasBg} onChange={(v) => set("canvasBg", v)} />
             <ColorField label="발표 모드 바깥 배경" value={s.surround} onChange={(v) => set("surround", v)} />
-            <div className="mt-1 h-5 w-full rounded" style={{ background: `linear-gradient(120deg, ${s.accent1}, ${s.accent2})` }} />
           </div>
 
           <Button onClick={() => void save()} disabled={saving}>{saving ? "저장 중…" : templateId && !readOnly ? "수정 저장" : "새 템플릿으로 저장"}</Button>
         </aside>
 
         <section className="flex h-full min-w-0 flex-col gap-3 p-6" style={{ background: s.surround }}>
-          <div className="flex gap-1.5">
-            {previews.map((p) => (
-              <button key={p.i} onClick={() => setPreviewIdx(p.i)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${previewIdx === p.i ? "bg-white text-black" : "bg-white/15 text-white/80 hover:bg-white/25"}`}>
-                {p.label}
-              </button>
-            ))}
-          </div>
+          <div className="text-xs font-medium text-white/70">미리보기 — {cur.name || ROLE_LABEL[cur.role]} 레이아웃</div>
           <div className="min-h-0 flex-1">
-            <DeckView slides={SEED_SLIDES} index={previewIdx} onIndexChange={setPreviewIdx} themeTokens={tokens} />
+            <DeckView slides={[sample]} index={0} onIndexChange={() => {}} themeTokens={tokens} layouts={[cur]} />
           </div>
         </section>
       </main>

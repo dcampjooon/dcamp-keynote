@@ -1,6 +1,38 @@
 // ABOUTME: 사전 지정 빌트인 템플릿(테마). 액센트 팔레트·캔버스 톤·익스포트 배경을 정의한다.
 // ABOUTME: 토큰은 .ppt-canvas의 CSS 변수를 오버라이드 — 흰 캔버스/짙은 텍스트 기조를 유지해 모든 블록 가독성을 보장한다.
 
+/* ---------- 레이아웃 스펙(PDF에서 발견·정의되는 영역/배치) ---------- */
+export type LayoutRole = "cover" | "section" | "body";
+export type AccentStyle = "none" | "bar-left" | "bar-top" | "underline" | "block";
+
+/** 한 종류의 슬라이드 레이아웃이 어떻게 구성되는지 — PDF 분석으로 채워지고 렌더러가 그대로 그린다. */
+export type LayoutSpec = {
+  id: string;
+  name: string; // 한글 라벨 (예: 표지, 본문(좌제목))
+  role: LayoutRole; // 슬라이드 매핑·생성용 거친 분류
+  bg: string; // 슬라이드 배경 hex(빈 문자열이면 캔버스 기본)
+  fg: string; // 텍스트 색 hex(빈 문자열이면 토큰 기본)
+  align: "left" | "center";
+  vAlign: "top" | "middle";
+  titleSize: number; // 제목 px
+  accent: AccentStyle; // 제목 주변 강조 요소
+  kicker: boolean; // 상단 브랜드/eyebrow 표시
+  footer: boolean; // 하단 푸터/페이지번호 표시
+  columns: 1 | 2; // 본문 영역 컬럼 수
+};
+
+export const DEFAULT_LAYOUTS: LayoutSpec[] = [
+  { id: "cover", name: "표지", role: "cover", bg: "", fg: "", align: "center", vAlign: "middle", titleSize: 60, accent: "none", kicker: true, footer: false, columns: 1 },
+  { id: "section", name: "간지", role: "section", bg: "", fg: "", align: "center", vAlign: "middle", titleSize: 52, accent: "none", kicker: true, footer: false, columns: 1 },
+  { id: "body", name: "본문", role: "body", bg: "", fg: "", align: "left", vAlign: "top", titleSize: 40, accent: "none", kicker: false, footer: false, columns: 1 },
+];
+
+/** 슬라이드 layout(enum) → 템플릿의 레이아웃 스펙 매핑(role 기준, 없으면 기본). */
+export function layoutForSlide(slideLayout: string, layouts: LayoutSpec[] = DEFAULT_LAYOUTS): LayoutSpec {
+  const role: LayoutRole = slideLayout === "title" ? "cover" : slideLayout === "section" ? "section" : "body";
+  return layouts.find((l) => l.role === role) ?? layouts.find((l) => l.role === "body") ?? DEFAULT_LAYOUTS[2];
+}
+
 export type Theme = {
   id: string;
   name: string;
@@ -11,6 +43,8 @@ export type Theme = {
   surround: string;
   /** 선택 UI 미리보기용 대표색 */
   swatch: [string, string];
+  /** PDF에서 발견·정의된 레이아웃들(없으면 기본 3종) */
+  layouts?: LayoutSpec[];
   /** 빌트인(수정/삭제 불가) 여부 */
   builtin?: boolean;
 };

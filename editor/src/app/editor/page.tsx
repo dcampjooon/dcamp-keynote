@@ -276,7 +276,7 @@ export default function EditorPage() {
             <StorylineBoard outline={outline} onChange={setOutline} />
           ) : slides.length > 0 ? (
             <div className="flex h-full flex-col p-6">
-              <DeckView slides={slides} index={index} onIndexChange={setIndex} editable={editMode} themeTokens={theme.tokens} onBlockPatch={editBlock} onTitleCommit={editTitle} />
+              <DeckView slides={slides} index={index} onIndexChange={setIndex} editable={editMode} themeTokens={theme.tokens} layouts={theme.layouts} onBlockPatch={editBlock} onTitleCommit={editTitle} />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">

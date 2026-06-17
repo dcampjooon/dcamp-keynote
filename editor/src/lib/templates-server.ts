@@ -2,9 +2,9 @@
 // ABOUTME: 익스포트 라우트가 deck.theme.id로 실제 토큰을 얻을 때 사용.
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { THEMES, DEFAULT_THEME, type Theme } from "@/lib/themes";
+import { THEMES, DEFAULT_THEME, DEFAULT_LAYOUTS, type LayoutSpec, type Theme } from "@/lib/themes";
 
-type Row = { id: string; name: string; description: string | null; theme: { tokens?: Record<string, string>; surround?: string; swatch?: [string, string] } | null };
+type Row = { id: string; name: string; description: string | null; theme: { tokens?: Record<string, string>; surround?: string; swatch?: [string, string]; layouts?: LayoutSpec[] } | null };
 
 export function rowToTheme(row: Row): Theme {
   const t = row.theme ?? {};
@@ -15,6 +15,7 @@ export function rowToTheme(row: Row): Theme {
     tokens: t.tokens ?? {},
     surround: t.surround ?? "#0a0e24",
     swatch: t.swatch ?? ["#2f6df6", "#14b8c4"],
+    layouts: t.layouts && t.layouts.length ? t.layouts : DEFAULT_LAYOUTS,
     builtin: false,
   };
 }

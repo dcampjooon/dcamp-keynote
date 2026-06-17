@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { SlideView, type RenderSlide } from "./SlideView";
 import type { BlockPatch } from "./BlockView";
+import { layoutForSlide, type LayoutSpec } from "@/lib/themes";
 
 export function DeckView({
   slides,
@@ -13,6 +14,7 @@ export function DeckView({
   onIndexChange,
   editable = false,
   themeTokens,
+  layouts,
   onBlockPatch,
   onTitleCommit,
 }: {
@@ -21,6 +23,7 @@ export function DeckView({
   onIndexChange: (i: number) => void;
   editable?: boolean;
   themeTokens?: Record<string, string>;
+  layouts?: LayoutSpec[];
   onBlockPatch?: (blockId: string, partial: BlockPatch) => void;
   onTitleCommit?: (text: string) => void;
 }) {
@@ -68,7 +71,15 @@ export function DeckView({
       <div ref={frameRef} className="ppt-frame relative min-w-0 flex-1 overflow-hidden">
         <div ref={canvasRef} className="ppt-canvas play" style={themeTokens as React.CSSProperties}>
           {current && (
-            <SlideView key={index} slide={current} editable={editable} onBlockPatch={onBlockPatch} onTitleCommit={onTitleCommit} />
+            <SlideView
+              key={index}
+              slide={current}
+              spec={layoutForSlide(current.layout, layouts)}
+              editable={editable}
+              pageNo={`${index + 1} / ${slides.length}`}
+              onBlockPatch={onBlockPatch}
+              onTitleCommit={onTitleCommit}
+            />
           )}
         </div>
         {/* 클릭 네비 — 편집 모드에서는 텍스트 클릭을 막지 않도록 끈다 */}
