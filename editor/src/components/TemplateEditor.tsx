@@ -45,6 +45,25 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
 
   const set = <K extends keyof TemplateSettings>(k: K, v: TemplateSettings[K]) => setS((p) => ({ ...p, [k]: v }));
   const tokens = useMemo(() => settingsToTokens(s), [s]);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  async function analyzePdf(file: File) {
+    setAnalyzing(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/templates/analyze", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "분석 실패");
+      setS((prev) => ({ ...prev, ...data.settings }));
+      if (data.name) setName(data.name);
+      toast.success(data.rationale ? `분석 완료 — ${data.rationale}` : "디자인을 분석해 적용했습니다.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "오류");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
 
   async function save() {
     if (!name.trim()) return toast.error("이름을 입력하세요.");
@@ -85,6 +104,17 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
             <h1 className="text-lg font-bold">{templateId && !readOnly ? "템플릿 수정" : "새 템플릿"}</h1>
           </div>
           {readOnly && <div className="rounded-md bg-muted p-2.5 text-xs text-muted-foreground">빌트인 템플릿입니다. 값을 바꿔 새 템플릿으로 저장하세요.</div>}
+
+          {/* 샘플 PDF에서 디자인 분석 */}
+          <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
+            <div className="text-xs font-bold text-primary">샘플 PDF로 디자인 가져오기</div>
+            <p className="text-xs text-muted-foreground">잘 만든 발표 PDF를 올리면 여백·색·타이포·모서리 등 공통 디자인을 분석해 아래 설정을 채웁니다.</p>
+            <label className="inline-flex cursor-pointer items-center justify-center rounded-md border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
+              {analyzing ? "분석 중…" : "📄 PDF 업로드 분석"}
+              <input type="file" accept="application/pdf" className="hidden" disabled={analyzing}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void analyzePdf(f); e.target.value = ""; }} />
+            </label>
+          </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">이름</label>
