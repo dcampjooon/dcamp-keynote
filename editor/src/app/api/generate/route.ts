@@ -81,7 +81,7 @@ async function generateSlide(ctx: string, plan: SlidePlan, n: number, total: num
 목적: ${plan.purpose}
 헤드라인: ${plan.headline}
 레이아웃: ${plan.layout}
-들어갈 요소: ${plan.blockHints.join(" / ")}`;
+들어갈 요소: ${plan.blockHints.join(" / ")}${plan.material?.trim() ? `\n참고 자료(이 내용을 우선 반영):\n${plan.material.trim()}` : ""}`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const msg = await anthropic().messages.create({

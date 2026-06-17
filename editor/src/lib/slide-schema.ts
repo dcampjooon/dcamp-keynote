@@ -74,6 +74,7 @@ export const SlidePlan = z.object({
   headline: z.string().describe("헤드라인(결론·인사이트)"),
   layout: SlideLayout,
   blockHints: z.array(z.string()).describe("들어갈 블록 종류·내용 힌트 (예: 'bullets: 3대 원칙', 'diagram: 데이터 흐름')"),
+  material: z.string().default("").describe("이 슬라이드에 반영할 참고 자료/사실/수치(사용자가 붙여넣음). 생성 시 우선 반영"),
 });
 export type SlidePlan = z.infer<typeof SlidePlan>;
 

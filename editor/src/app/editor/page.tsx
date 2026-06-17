@@ -8,14 +8,15 @@ import Link from "next/link";
 import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { DeckView } from "@/components/slide-renderer/DeckView";
+import { StorylineBoard } from "@/components/StorylineBoard";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import type { Outline } from "@/lib/slide-schema";
 import { SEED_SLIDES } from "@/lib/seed-deck";
 import { THEMES, DEFAULT_THEME, type Theme } from "@/lib/themes";
 
-type Stage = "idle" | "outlining" | "outline" | "generating" | "ready";
+type Stage = "idle" | "outlining" | "storyline" | "generating" | "ready";
 
 export default function EditorPage() {
   const [stage, setStage] = useState<Stage>("idle");
@@ -85,7 +86,7 @@ export default function EditorPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "아웃라인 생성 실패");
       setOutline(data.outline);
-      setStage("outline");
+      setStage("storyline");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "오류");
       setStage("idle");
@@ -110,7 +111,7 @@ export default function EditorPage() {
       toast.success(`${data.slides.length}장 생성 완료`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "오류");
-      setStage("outline");
+      setStage("storyline");
     }
   }
 
@@ -211,7 +212,7 @@ export default function EditorPage() {
                 </div>
               </div>
               <Button onClick={makeOutline} disabled={stage === "outlining" || !brief.trim()}>
-                {stage === "outlining" ? "기획 설계 중…" : "기획 시작"}
+                {stage === "outlining" ? "스토리라인 생성 중…" : "① 스토리라인 생성"}
               </Button>
               <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => { setSlides(SEED_SLIDES); setIndex(0); setStage("ready"); }}>
                 샘플 미리보기 (키 없이 렌더 확인)
@@ -219,28 +220,18 @@ export default function EditorPage() {
             </div>
           )}
 
-          {stage === "outline" && outline && (
+          {stage === "storyline" && outline && (
             <div className="flex flex-col gap-3">
-              <div>
-                <div className="text-base font-bold">{outline.title}</div>
-                <p className="mt-1 text-sm text-muted-foreground">{outline.storyline}</p>
+              <div className="rounded-md bg-primary/10 p-3 text-xs text-muted-foreground">
+                <span className="font-bold text-foreground">1단계 · 스토리라인</span> — 오른쪽에서 슬라이드별로 다듬고 참고 자료를 붙여넣으세요.
               </div>
-              <div className="flex flex-col gap-2">
-                {outline.slides.map((s, i) => (
-                  <div key={i} className="rounded-md border p-2.5 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-muted-foreground">{i + 1}</span>
-                      <Badge variant="outline" className="text-[10px]">{s.layout}</Badge>
-                    </div>
-                    <div className="mt-1 font-semibold">{s.headline}</div>
-                    <div className="mt-0.5 text-xs text-muted-foreground">{s.blockHints.join(" · ")}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={generate} className="flex-1">이대로 장표 생성</Button>
-                <Button variant="outline" onClick={reset}>처음부터</Button>
-              </div>
+              <label className="text-sm font-medium">발표 제목</label>
+              <Input value={outline.title} onChange={(e) => setOutline({ ...outline, title: e.target.value })} />
+              <label className="text-sm font-medium">스토리라인</label>
+              <Textarea value={outline.storyline} onChange={(e) => setOutline({ ...outline, storyline: e.target.value })} rows={5} />
+              <div className="text-xs text-muted-foreground">슬라이드 {outline.slides.length}장</div>
+              <Button onClick={generate} className="w-full">② 이 내용으로 프리젠테이션 생성</Button>
+              <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={reset}>처음부터</Button>
             </div>
           )}
 
@@ -280,11 +271,17 @@ export default function EditorPage() {
           )}
         </aside>
 
-        <section className="flex h-full min-w-0 flex-col bg-muted/40 p-6">
-          {slides.length > 0 ? (
-            <DeckView slides={slides} index={index} onIndexChange={setIndex} editable={editMode} themeTokens={theme.tokens} onBlockPatch={editBlock} onTitleCommit={editTitle} />
+        <section className="flex h-full min-w-0 flex-col bg-muted/40">
+          {stage === "storyline" && outline ? (
+            <StorylineBoard outline={outline} onChange={setOutline} />
+          ) : slides.length > 0 ? (
+            <div className="flex h-full flex-col p-6">
+              <DeckView slides={slides} index={index} onIndexChange={setIndex} editable={editMode} themeTokens={theme.tokens} onBlockPatch={editBlock} onTitleCommit={editTitle} />
+            </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">왼쪽에서 발표를 설계하면 여기에 16:9 미리보기가 나타납니다.</div>
+            <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
+              {stage === "generating" ? "슬라이드를 생성하는 중…" : "왼쪽에서 발표 내용을 설명하고 ① 스토리라인 생성을 누르세요."}
+            </div>
           )}
         </section>
       </main>
