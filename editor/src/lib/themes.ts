@@ -48,7 +48,10 @@ export type LayoutSpec = {
   accent: AccentStyle; // 제목 주변 강조 요소
   kicker: boolean; // (레거시) 상단 eyebrow 표시 — regions 없을 때 폴백용
   footer: boolean; // (레거시) 하단 푸터 표시 — regions 없을 때 폴백용
-  columns: 1 | 2; // 본문 영역 컬럼 수
+  columns: 1 | 2 | 3; // 본문 하단 콘텐츠 컬럼 수
+  colBg?: string; // 컬럼 영역 패널 배경 hex(빈 문자열=패널 없음)
+  colGap?: number; // 컬럼 사이 간격 px
+  colRadius?: number; // 컬럼 패널 모서리 둥글기 px
   regions?: Region[]; // 영역 기반 정의(있으면 영역으로 렌더, 없으면 위 스펙으로 폴백)
   sourcePage?: number; // 이 레이아웃을 대표하는 원본 PDF 페이지(1-based) — '원본 보기' 오버레이용
 };

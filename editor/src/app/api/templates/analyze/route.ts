@@ -33,7 +33,10 @@ const Layout = z.object({
   accent: z.enum(["none", "bar-left", "bar-top", "underline", "block"]).default("none"),
   kicker: z.boolean().default(false),
   footer: z.boolean().default(false),
-  columns: z.number().int().describe("본문 차트/콘텐츠 컬럼 수(1단이면 1, 좌우 2단이면 2)"),
+  columns: z.number().int().describe("본문 차트/콘텐츠 컬럼 수(1단=1, 좌우 2단=2, 3단=3)"),
+  colBg: z.string().default("").describe("컬럼 영역 패널 배경 hex(옅은 패널이 있으면 그 색, 없으면 빈 문자열)"),
+  colGap: z.number().default(0).describe("컬럼 사이 간격 px(1280 기준, 추정)"),
+  colRadius: z.number().default(0).describe("컬럼 패널 모서리 둥글기 px"),
   sourcePage: z.number().int().default(1).describe("이 레이아웃을 가장 잘 보여주는 PDF 페이지 번호(1부터)"),
   regions: z.array(RegionZ).max(14).describe("이 레이아웃을 구성하는 영역들 — 위치(%)·역할·실제 텍스트·선·차트 자리·푸터까지"),
 });
@@ -70,7 +73,10 @@ const SYSTEM = `당신은 프레젠테이션 레이아웃 분석가다. 업로�
 
 3) 전역 디자인: 주/보조 강조색, 기본 텍스트색, 기본 배경, 폰트(세리프/고딕), 여백 밀도, 모서리 둥글기, 한글 줄바꿈.
 
-규칙: 본문의 세세한 모든 글머리표까지 옮길 필요는 없다. 영역의 '위치·역할·대표 텍스트 한 줄'이면 충분하다. 색은 실제 사용된 hex로. fontSize는 1280x720 기준 px로 추정.`;
+규칙:
+- 텍스트 영역(text)의 sampleText는 원본의 분량(줄 수)을 반영하라. 원본 intro/설명이 2~3줄이면 sampleText도 2~3줄로 줄바꿈(\\n) 포함해 담아, 그 영역에 들어갈 적정 텍스트 양을 알 수 있게 한다. 한 줄이면 한 줄.
+- 본문 하단에 좌우로 나뉜 영역이 있으면 columns로 그 개수(1/2/3)를 표기하고, 각 컬럼 영역에 옅은 패널 배경이 있으면 colBg(hex)·모서리 colRadius(px)·컬럼 사이 간격 colGap(px)을 추정하라(없으면 colBg는 빈 문자열).
+색은 실제 사용된 hex로. fontSize는 1280x720 기준 px로 추정.`;
 
 export async function POST(request: Request) {
   try {
@@ -110,7 +116,8 @@ export async function POST(request: Request) {
       const n = (roleCount[l.role] = (roleCount[l.role] ?? 0) + 1);
       const id = n > 1 ? `${l.role}-${n}` : l.role;
       const regions = (l.regions ?? []).map((r, ri) => ({ ...r, id: `${id}-r${ri}` }));
-      return { ...l, columns: (l.columns >= 2 ? 2 : 1) as 1 | 2, id, regions };
+      const columns = (l.columns >= 3 ? 3 : l.columns >= 2 ? 2 : 1) as 1 | 2 | 3;
+      return { ...l, columns, id, regions };
     });
     return Response.json({ name, rationale, settings, layouts, page });
   } catch (err) {

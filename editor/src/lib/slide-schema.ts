@@ -8,7 +8,7 @@ export const AnimKind = z.enum(["rise", "fade", "scale", "draw", "stagger", "non
 export type AnimKind = z.infer<typeof AnimKind>;
 
 /** 블록이 놓이는 그리드 컬럼(2-컬럼 split 레이아웃에서 사용). */
-export const Column = z.enum(["full", "left", "right"]);
+export const Column = z.enum(["full", "left", "mid", "right"]);
 export type Column = z.infer<typeof Column>;
 
 const Base = {

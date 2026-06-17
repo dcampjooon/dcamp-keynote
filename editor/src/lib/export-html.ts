@@ -136,8 +136,10 @@ function renderSlide(slide: RenderSlide, idx: number, total: number, layouts: La
   const spec = layoutForSlide(slide.layout, layouts);
   const full = slide.blocks.filter((b) => b.column === "full");
   const left = slide.blocks.filter((b) => b.column === "left");
+  const mid = slide.blocks.filter((b) => b.column === "mid");
   const right = slide.blocks.filter((b) => b.column === "right");
-  const hasCols = left.length > 0 || right.length > 0;
+  const hasCols = left.length > 0 || mid.length > 0 || right.length > 0;
+  const colGroups = spec.columns >= 3 ? [left, mid, right] : [left, right];
 
   let i = 0;
   const delay = () => 110 + i++ * 90;
@@ -166,7 +168,11 @@ function renderSlide(slide: RenderSlide, idx: number, total: number, layouts: La
   const titleStyle = `font-size:${spec.titleSize}px;animation-delay:${delay()}ms${spec.accent === "underline" ? ";border-bottom:4px solid var(--blue);padding-bottom:8px;display:inline-block" : ""}`;
   const titleEl = showTitle ? `<h2 class="ppt-headline" data-anim="rise" style="${titleStyle}">${esc(slide.title)}</h2>` : "";
   const fullEls = full.map(rb).join("");
-  const colsEl = hasCols ? `<div class="ppt-cols"><div class="ppt-col">${left.map(rb).join("")}</div><div class="ppt-col">${right.map(rb).join("")}</div></div>` : "";
+  const colsStyle = [`grid-template-columns:repeat(${Math.max(2, spec.columns)},1fr)`, spec.colGap != null ? `gap:${spec.colGap}px` : ""].filter(Boolean).join(";");
+  const colStyle = spec.colBg ? `background:${spec.colBg};border-radius:${spec.colRadius ?? 0}px;padding:20px` : "";
+  const colsEl = hasCols
+    ? `<div class="ppt-cols" style="${colsStyle}">${colGroups.map((g) => `<div class="ppt-col" style="${colStyle}">${g.map(rb).join("")}</div>`).join("")}</div>`
+    : "";
   const footer = spec.footer ? `<div style="position:absolute;bottom:28px;right:36px;font-size:14px;color:var(--ink-faint);opacity:.8">${idx + 1} / ${total}</div>` : "";
 
   return `<section class="ppt-slide" style="${sectionStyle}">${accentBar}${titleEl}${fullEls}${colsEl}${footer}</section>`;

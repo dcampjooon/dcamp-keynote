@@ -162,8 +162,10 @@ function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
   const align = spec.align === "center" ? "center" : "left";
   const full = slide.blocks.filter((b) => b.column === "full");
   const left = slide.blocks.filter((b) => b.column === "left");
+  const mid = slide.blocks.filter((b) => b.column === "mid");
   const right = slide.blocks.filter((b) => b.column === "right");
-  const hasCols = left.length > 0 || right.length > 0;
+  const colGroups = spec.columns >= 3 ? [left, mid, right] : [left, right];
+  const hasCols = left.length > 0 || mid.length > 0 || right.length > 0;
   const heroLike = spec.role === "cover" || spec.role === "section";
   const hasHeading = slide.blocks.some((b) => b.type === "heading");
   const showTitle = slide.title && !(heroLike && hasHeading);
@@ -199,11 +201,21 @@ function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
   } else {
     let yf = top;
     for (const b of full) { const h = blockH(b, CW); addBlock(s, b, MX, yf, CW, h); yf += h + 0.16; }
-    const colW = (CW - 0.5) / 2;
+    const n = colGroups.length;
+    const gap = spec.colGap != null ? px(spec.colGap) : 0.5;
+    const colW = (CW - gap * (n - 1)) / n;
     const colTop = yf;
     const colH = SLIDE_H - MY - colTop;
-    placeCol(s, left, MX, colTop, colW, colH);
-    placeCol(s, right, MX + colW + 0.5, colTop, colW, colH);
+    const pad = spec.colBg ? 0.18 : 0;
+    colGroups.forEach((group, gi) => {
+      const cx = MX + gi * (colW + gap);
+      if (spec.colBg) {
+        const fill = { color: spec.colBg.replace(/^#/, "") };
+        if (spec.colRadius) s.addShape("roundRect", { x: cx, y: colTop, w: colW, h: colH, fill, rectRadius: px(spec.colRadius) });
+        else s.addShape("rect", { x: cx, y: colTop, w: colW, h: colH, fill });
+      }
+      placeCol(s, group, cx + pad, colTop + pad, colW - pad * 2, colH - pad * 2);
+    });
   }
 }
 

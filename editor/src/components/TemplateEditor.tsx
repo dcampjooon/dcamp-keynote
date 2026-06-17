@@ -284,10 +284,17 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
               <Row label="상단 브랜드"><input type="checkbox" checked={cur.kicker} onChange={(e) => setLayout({ kicker: e.target.checked })} className="size-4" /></Row>
               <Row label="하단 푸터/페이지번호"><input type="checkbox" checked={cur.footer} onChange={(e) => setLayout({ footer: e.target.checked })} className="size-4" /></Row>
               <Row label="본문 컬럼">
-                <select value={cur.columns} onChange={(e) => setLayout({ columns: (+e.target.value === 2 ? 2 : 1) as 1 | 2 })} className="h-8 rounded-md border bg-background px-2 text-sm">
-                  <option value={1}>1단</option><option value={2}>2단</option>
+                <select value={cur.columns} onChange={(e) => setLayout({ columns: (+e.target.value as 1 | 2 | 3) })} className="h-8 rounded-md border bg-background px-2 text-sm">
+                  <option value={1}>1단</option><option value={2}>2단</option><option value={3}>3단</option>
                 </select>
               </Row>
+              {cur.columns >= 2 && (
+                <>
+                  <ToggleColor label="컬럼 배경" value={cur.colBg ?? ""} fallback="#f4f6fa" onChange={(v) => setLayout({ colBg: v })} />
+                  <Row label={`컬럼 간격 ${cur.colGap ?? 36}px`}><input type="range" min={0} max={80} value={cur.colGap ?? 36} onChange={(e) => setLayout({ colGap: +e.target.value })} /></Row>
+                  <Row label={`컬럼 R값 ${cur.colRadius ?? 0}px`}><input type="range" min={0} max={32} value={cur.colRadius ?? 0} onChange={(e) => setLayout({ colRadius: +e.target.value })} /></Row>
+                </>
+              )}
               {layouts.length > 1 && <button className="self-start text-xs text-destructive hover:underline" onClick={() => removeLayout(sel)}>이 레이아웃 삭제</button>}
             </div>
 

@@ -29,8 +29,10 @@ export function SlideView({
 }) {
   const full = slide.blocks.filter((b) => b.column === "full");
   const left = slide.blocks.filter((b) => b.column === "left");
+  const mid = slide.blocks.filter((b) => b.column === "mid");
   const right = slide.blocks.filter((b) => b.column === "right");
-  const hasCols = left.length > 0 || right.length > 0;
+  const hasCols = left.length > 0 || mid.length > 0 || right.length > 0;
+  const colGroups = spec.columns >= 3 ? [left, mid, right] : [left, right];
 
   let i = 0;
   const delay = () => 110 + i++ * 90;
@@ -84,9 +86,22 @@ export function SlideView({
       {full.map(renderBlock)}
 
       {hasCols && (
-        <div className="ppt-cols">
-          <div className="ppt-col">{left.map(renderBlock)}</div>
-          <div className="ppt-col">{right.map(renderBlock)}</div>
+        <div
+          className="ppt-cols"
+          style={{
+            gridTemplateColumns: `repeat(${Math.max(2, spec.columns)}, 1fr)`,
+            ...(spec.colGap != null ? { gap: spec.colGap } : {}),
+          }}
+        >
+          {colGroups.map((group, gi) => (
+            <div
+              key={gi}
+              className="ppt-col"
+              style={spec.colBg ? { background: spec.colBg, borderRadius: spec.colRadius ?? 0, padding: 20 } : undefined}
+            >
+              {group.map(renderBlock)}
+            </div>
+          ))}
         </div>
       )}
 
