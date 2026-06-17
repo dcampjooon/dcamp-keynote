@@ -159,7 +159,6 @@ function renderSlide(slide: RenderSlide, idx: number, total: number, layouts: La
     `text-align:${isCenter ? "center" : "left"}`,
   ].filter(Boolean).join(";");
 
-  const brand = spec.kicker ? `<div class="ppt-brand" data-anim="fade" style="animation-delay:40ms">d·camp &nbsp;|&nbsp; IT팀</div>` : "";
   const accentBar =
     spec.accent !== "none" && spec.accent !== "underline"
       ? `<div data-anim="scale" style="width:${spec.accent === "block" ? 28 : 56}px;height:${spec.accent === "block" ? 28 : 6}px;border-radius:${spec.accent === "block" ? 6 : 999}px;background:var(--grad);margin:${isCenter ? "0 auto 14px" : "0 0 14px"};animation-delay:60ms"></div>`
@@ -170,7 +169,7 @@ function renderSlide(slide: RenderSlide, idx: number, total: number, layouts: La
   const colsEl = hasCols ? `<div class="ppt-cols"><div class="ppt-col">${left.map(rb).join("")}</div><div class="ppt-col">${right.map(rb).join("")}</div></div>` : "";
   const footer = spec.footer ? `<div style="position:absolute;bottom:28px;right:36px;font-size:14px;color:var(--ink-faint);opacity:.8">${idx + 1} / ${total}</div>` : "";
 
-  return `<section class="ppt-slide" style="${sectionStyle}">${brand}${accentBar}${titleEl}${fullEls}${colsEl}${footer}</section>`;
+  return `<section class="ppt-slide" style="${sectionStyle}">${accentBar}${titleEl}${fullEls}${colsEl}${footer}</section>`;
 }
 
 const LAYOUT_CSS = `

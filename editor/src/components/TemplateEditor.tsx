@@ -10,8 +10,9 @@ import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DeckView } from "@/components/slide-renderer/DeckView";
+import { RegionLayoutCanvas } from "@/components/RegionLayoutCanvas";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { FONTS, DEFAULT_SETTINGS, DEFAULT_LAYOUTS, settingsToTokens, tokensToSettings, type Theme, type TemplateSettings, type Density, type LayoutSpec, type LayoutRole, type AccentStyle } from "@/lib/themes";
+import { FONTS, DEFAULT_SETTINGS, DEFAULT_LAYOUTS, settingsToTokens, tokensToSettings, type Theme, type TemplateSettings, type Density, type LayoutSpec, type LayoutRole, type AccentStyle, type Region, type RegionKind } from "@/lib/themes";
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -61,6 +62,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const [s, setS] = useState<TemplateSettings>(initial ? tokensToSettings(initial.tokens, initial.surround) : DEFAULT_SETTINGS);
   const [layouts, setLayouts] = useState<LayoutSpec[]>(initial?.layouts?.length ? initial.layouts : DEFAULT_LAYOUTS);
   const [sel, setSel] = useState(0);
+  const [selReg, setSelReg] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -68,6 +70,16 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const tokens = useMemo(() => settingsToTokens(s), [s]);
   const cur = layouts[Math.min(sel, layouts.length - 1)] ?? DEFAULT_LAYOUTS[0];
   const setLayout = (patch: Partial<LayoutSpec>) => setLayouts((ls) => ls.map((l, i) => (i === sel ? { ...l, ...patch } : l)));
+  const regions = cur.regions ?? [];
+  const region = regions.find((r) => r.id === selReg);
+  const setRegions = (rs: Region[]) => setLayout({ regions: rs });
+  const setRegion = (patch: Partial<Region>) => setRegions(regions.map((r) => (r.id === selReg ? { ...r, ...patch } : r)));
+  const addRegion = () => {
+    const id = `${cur.id}-r${Date.now().toString(36)}`;
+    setRegions([...regions, { id, kind: "text", label: "text", x: 12, y: 12, w: 40, h: 10, sampleText: "텍스트", fontSize: 20, color: "", weight: "normal", align: "left", orient: "h", thickness: 3 }]);
+    setSelReg(id);
+  };
+  const removeRegion = () => { if (region) { setRegions(regions.filter((r) => r.id !== selReg)); setSelReg(""); } };
 
   async function analyzePdf(file: File) {
     setAnalyzing(true);
@@ -199,6 +211,67 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
               </Row>
               {layouts.length > 1 && <button className="self-start text-xs text-destructive hover:underline" onClick={() => removeLayout(sel)}>이 레이아웃 삭제</button>}
             </div>
+
+            {/* 영역(zone) 편집 */}
+            <div className="mt-1 flex flex-col gap-2 border-t pt-2.5">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-muted-foreground">영역 ({regions.length}) — 미리보기에서 드래그·리사이즈</div>
+                <button className="text-xs text-primary hover:underline" onClick={addRegion}>+ 영역</button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {regions.map((r) => (
+                  <button key={r.id} onClick={() => setSelReg(r.id)}
+                    className={`rounded border px-1.5 py-0.5 text-[10px] ${r.id === selReg ? "border-primary bg-primary/10 font-semibold" : "hover:border-muted-foreground/40"}`}>
+                    {r.label}{r.kind !== "text" ? `·${r.kind}` : ""}
+                  </button>
+                ))}
+                {regions.length === 0 && <span className="text-xs text-muted-foreground">PDF를 분석하거나 + 영역으로 추가하세요.</span>}
+              </div>
+              {region && (
+                <div className="flex flex-col gap-1.5 rounded-md bg-muted/40 p-2">
+                  <Row label="역할"><Input value={region.label} onChange={(e) => setRegion({ label: e.target.value })} className="h-7 w-36 text-xs" /></Row>
+                  <Row label="종류">
+                    <select value={region.kind} onChange={(e) => setRegion({ kind: e.target.value as RegionKind })} className="h-7 rounded border bg-background px-1 text-xs">
+                      <option value="text">텍스트</option><option value="line">선</option><option value="placeholder">차트/이미지</option><option value="footer">푸터</option>
+                    </select>
+                  </Row>
+                  {(region.kind === "text" || region.kind === "footer") && (
+                    <>
+                      <label className="text-xs text-muted-foreground">샘플 텍스트</label>
+                      <Input value={region.sampleText ?? ""} onChange={(e) => setRegion({ sampleText: e.target.value })} className="h-7 text-xs" />
+                      <Row label={`크기 ${region.fontSize ?? 20}px`}><input type="range" min={10} max={140} value={region.fontSize ?? 20} onChange={(e) => setRegion({ fontSize: +e.target.value })} /></Row>
+                      <Row label="굵기">
+                        <select value={region.weight ?? "normal"} onChange={(e) => setRegion({ weight: e.target.value as Region["weight"] })} className="h-7 rounded border bg-background px-1 text-xs">
+                          <option value="normal">보통</option><option value="bold">굵게</option><option value="black">매우굵게</option>
+                        </select>
+                      </Row>
+                      <Row label="정렬">
+                        <select value={region.align ?? "left"} onChange={(e) => setRegion({ align: e.target.value as Region["align"] })} className="h-7 rounded border bg-background px-1 text-xs">
+                          <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+                        </select>
+                      </Row>
+                    </>
+                  )}
+                  {region.kind === "line" && (
+                    <>
+                      <Row label="방향">
+                        <select value={region.orient ?? "h"} onChange={(e) => setRegion({ orient: e.target.value as "h" | "v" })} className="h-7 rounded border bg-background px-1 text-xs">
+                          <option value="h">가로</option><option value="v">세로</option>
+                        </select>
+                      </Row>
+                      <Row label={`두께 ${region.thickness ?? 3}px`}><input type="range" min={1} max={12} value={region.thickness ?? 3} onChange={(e) => setRegion({ thickness: +e.target.value })} /></Row>
+                    </>
+                  )}
+                  <Row label="색 지정">
+                    <span className="flex items-center gap-2">
+                      <input type="checkbox" checked={!!region.color} onChange={(e) => setRegion({ color: e.target.checked ? cur.fg || "#16233d" : "" })} className="size-4" />
+                      <input type="color" value={region.color || "#16233d"} disabled={!region.color} onChange={(e) => setRegion({ color: e.target.value })} className="h-7 w-9 cursor-pointer rounded border disabled:opacity-40" />
+                    </span>
+                  </Row>
+                  <button className="self-start text-xs text-destructive hover:underline" onClick={removeRegion}>영역 삭제</button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 전역 디자인 */}
@@ -227,9 +300,13 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
         </aside>
 
         <section className="flex h-full min-w-0 flex-col gap-3 p-6" style={{ background: s.surround }}>
-          <div className="text-xs font-medium text-white/70">미리보기 — {cur.name || ROLE_LABEL[cur.role]} 레이아웃</div>
+          <div className="text-xs font-medium text-white/70">미리보기 — {cur.name || ROLE_LABEL[cur.role]} {regions.length ? "(영역 드래그·리사이즈)" : ""}</div>
           <div className="min-h-0 flex-1">
-            <DeckView slides={[sample]} index={0} onIndexChange={() => {}} themeTokens={tokens} layouts={[cur]} />
+            {regions.length ? (
+              <RegionLayoutCanvas spec={cur} tokens={tokens} editable selectedId={selReg} onSelect={setSelReg} onChange={setRegions} />
+            ) : (
+              <DeckView slides={[sample]} index={0} onIndexChange={() => {}} themeTokens={tokens} layouts={[cur]} />
+            )}
           </div>
         </section>
       </main>

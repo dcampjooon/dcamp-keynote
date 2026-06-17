@@ -75,12 +75,6 @@ export function SlideView({
 
   return (
     <section className="ppt-slide" style={sectionStyle}>
-      {spec.kicker && (
-        <div className="ppt-brand" data-anim="fade" style={{ animationDelay: "40ms" }}>
-          d·camp &nbsp;|&nbsp; IT팀
-        </div>
-      )}
-
       {accentBar}
 
       {showTitle && (

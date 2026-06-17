@@ -163,7 +163,6 @@ function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
 
   // 세로 중앙 배치
   if (spec.vAlign === "middle") {
-    if (spec.kicker) s.addText("d·camp  |  IT팀", { x: MX, y: 1.2, w: CW, h: 0.4, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_FAINT, align, charSpacing: 3 });
     const blocks = full;
     const totalH = (showTitle ? th : 0) + blocks.reduce((a, b) => a + blockH(b, CW), 0);
     let y = Math.max(MY + 0.6, (SLIDE_H - totalH) / 2);
@@ -182,10 +181,6 @@ function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
 
   // 상단 정렬
   let top = MY;
-  if (spec.kicker) {
-    s.addText("d·camp  |  IT팀", { x: MX, y: top, w: CW, h: 0.4, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_FAINT, align, charSpacing: 3 });
-    top += 0.5;
-  }
   if (showTitle) {
     s.addText(slide.title, { x: MX, y: top, w: CW, h: 0.9, fontFace: FONT, fontSize: pt(spec.titleSize), bold: true, color: titleColor, align, valign: "top" });
     top += 1.05;

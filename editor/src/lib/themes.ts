@@ -5,6 +5,22 @@
 export type LayoutRole = "cover" | "section" | "body";
 export type AccentStyle = "none" | "bar-left" | "bar-top" | "underline" | "block";
 
+/** 레이아웃 안의 한 영역(zone) — 위치(%)와 역할을 가진다. PDF에서 위치·선·샘플텍스트까지 추출. */
+export type RegionKind = "text" | "line" | "placeholder" | "footer";
+export type Region = {
+  id: string;
+  kind: RegionKind;
+  label: string; // 역할: eyebrow/headline/intro/partNumber/chartTitle/chart/source/docname/divider 등
+  x: number; y: number; w: number; h: number; // 슬라이드 대비 % (0~100)
+  sampleText?: string; // PDF의 실제 텍스트(미리보기용)
+  fontSize?: number; // px
+  color?: string; // hex (빈값=레이아웃 fg/기본 ink)
+  weight?: "normal" | "bold" | "black";
+  align?: "left" | "center" | "right";
+  orient?: "h" | "v"; // line 방향
+  thickness?: number; // line 두께 px
+};
+
 /** 한 종류의 슬라이드 레이아웃이 어떻게 구성되는지 — PDF 분석으로 채워지고 렌더러가 그대로 그린다. */
 export type LayoutSpec = {
   id: string;
@@ -16,9 +32,10 @@ export type LayoutSpec = {
   vAlign: "top" | "middle";
   titleSize: number; // 제목 px
   accent: AccentStyle; // 제목 주변 강조 요소
-  kicker: boolean; // 상단 브랜드/eyebrow 표시
-  footer: boolean; // 하단 푸터/페이지번호 표시
+  kicker: boolean; // (레거시) 상단 eyebrow 표시 — regions 없을 때 폴백용
+  footer: boolean; // (레거시) 하단 푸터 표시 — regions 없을 때 폴백용
   columns: 1 | 2; // 본문 영역 컬럼 수
+  regions?: Region[]; // 영역 기반 정의(있으면 영역으로 렌더, 없으면 위 스펙으로 폴백)
 };
 
 export const DEFAULT_LAYOUTS: LayoutSpec[] = [
