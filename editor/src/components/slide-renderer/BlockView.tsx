@@ -52,11 +52,13 @@ export function BlockView({
   block,
   delay,
   editable = false,
+  staticRender = false,
   onPatch,
 }: {
   block: Block;
   delay: number;
   editable?: boolean;
+  staticRender?: boolean; // HTML 익스포트(SSR)용: kpi를 최종값+data-to로 렌더(런타임 JS가 카운트업)
   onPatch?: (partial: BlockPatch) => void;
 }) {
   const anim = { "data-anim": block.anim, style: { animationDelay: `${delay}ms` } } as const;
@@ -119,6 +121,11 @@ export function BlockView({
                     patch({ items: block.items.map((x, j) => (j === i ? { ...x, value: isNaN(num) ? x.value : num, suffix } : x)) } as BlockPatch);
                   }}
                 />
+              ) : staticRender ? (
+                <span className="num" data-to={k.value} data-suffix={k.suffix}>
+                  {k.value.toLocaleString()}
+                  {k.suffix}
+                </span>
               ) : (
                 <CountUp to={k.value} suffix={k.suffix} />
               )}

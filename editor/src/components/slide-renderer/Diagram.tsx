@@ -109,8 +109,8 @@ export function Diagram({ block }: { block: DiagramBlock }) {
           </animateMotion>
         </circle>
       ))}
-      {/* edge labels */}
-      {edges.map((e) =>
+      {/* edge labels — graph는 중앙 교차로 뭉치므로 flow에서만 */}
+      {block.kind === "flow" && edges.map((e) =>
         e.label ? (
           <text key={`${e.id}-lbl`} x={e.mid.x} y={e.mid.y - 8} textAnchor="middle" fontSize={13} fill="var(--ink-faint)">
             {e.label}

@@ -12,11 +12,13 @@ export type RenderSlide = Omit<Slide, "id"> & { id?: string; version?: number };
 export function SlideView({
   slide,
   editable = false,
+  staticRender = false,
   onBlockPatch,
   onTitleCommit,
 }: {
   slide: RenderSlide;
   editable?: boolean;
+  staticRender?: boolean;
   onBlockPatch?: (blockId: string, partial: BlockPatch) => void;
   onTitleCommit?: (text: string) => void;
 }) {
@@ -33,7 +35,7 @@ export function SlideView({
   const showTitle = (slide.title || editable) && !(isHero && hasHeading);
 
   const renderBlock = (b: Block) => (
-    <BlockView key={b.id} block={b} delay={delay()} editable={editable} onPatch={(p) => onBlockPatch?.(b.id, p)} />
+    <BlockView key={b.id} block={b} delay={delay()} editable={editable} staticRender={staticRender} onPatch={(p) => onBlockPatch?.(b.id, p)} />
   );
 
   return (

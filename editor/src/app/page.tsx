@@ -235,9 +235,19 @@ export default function Home() {
               </p>
             </div>
 
-            <Button variant={editMode ? "default" : "outline"} onClick={() => setEditMode((v) => !v)}>
-              {editMode ? "편집 종료" : "✏️ 인라인 편집"}
-            </Button>
+            <div className="flex gap-2">
+              <Button className="flex-1" variant={editMode ? "default" : "outline"} onClick={() => setEditMode((v) => !v)}>
+                {editMode ? "편집 종료" : "✏️ 인라인 편집"}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!deckId}
+                onClick={() => deckId && window.open(`/api/export/html?deckId=${deckId}`, "_blank")}
+                title={deckId ? "HTML 파일로 내보내기" : "생성된 발표만 내보낼 수 있습니다"}
+              >
+                ⬇ HTML
+              </Button>
+            </div>
 
             {/* 채팅 패치 — 현재 슬라이드를 자연어로 수정 */}
             <div className="flex flex-col gap-2 rounded-md border p-3">
