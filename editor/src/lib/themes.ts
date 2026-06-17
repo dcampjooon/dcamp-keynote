@@ -32,3 +32,69 @@ export const DEFAULT_THEME = THEMES[0];
 export function themeById(id?: string | null): Theme {
   return THEMES.find((t) => t.id === id) ?? DEFAULT_THEME;
 }
+
+/* ---------- 웹폰트(템플릿에서 선택) ---------- */
+export type Font = { id: string; label: string; stack: string; url: string };
+export const FONTS: Font[] = [
+  { id: "pretendard", label: "Pretendard (기본)", stack: '"Pretendard Variable", Pretendard, system-ui, sans-serif', url: "" },
+  { id: "noto-sans-kr", label: "본고딕 (Noto Sans KR)", stack: '"Noto Sans KR", sans-serif', url: "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" },
+  { id: "gowun-dodum", label: "고운돋움", stack: '"Gowun Dodum", sans-serif', url: "https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" },
+  { id: "nanum-myeongjo", label: "나눔명조 (세리프)", stack: '"Nanum Myeongjo", serif', url: "https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" },
+  { id: "ibm-plex-kr", label: "IBM Plex Sans KR", stack: '"IBM Plex Sans KR", sans-serif', url: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" },
+];
+export function fontById(id?: string): Font {
+  return FONTS.find((f) => f.id === id) ?? FONTS[0];
+}
+
+/* ---------- 템플릿 상세 설정 ↔ 토큰 ---------- */
+export type Density = "compact" | "normal" | "roomy";
+export const DENSITY_PAD: Record<Density, string> = { compact: "48px 64px", normal: "64px 80px", roomy: "82px 104px" };
+
+export type TemplateSettings = {
+  accent1: string; accent2: string; canvasBg: string; ink: string; surround: string;
+  fontId: string; keepAll: boolean; radius: number; density: Density;
+  titleSize: number; sectionSize: number; bodySize: number;
+};
+
+export const DEFAULT_SETTINGS: TemplateSettings = {
+  accent1: "#2f6df6", accent2: "#14b8c4", canvasBg: "#ffffff", ink: "#16233d", surround: "#0a0e24",
+  fontId: "pretendard", keepAll: false, radius: 10, density: "normal", titleSize: 60, sectionSize: 52, bodySize: 40,
+};
+
+export function settingsToTokens(s: TemplateSettings): Record<string, string> {
+  return {
+    "--blue": s.accent1,
+    "--cyan": s.accent2,
+    "--grad": `linear-gradient(120deg, ${s.accent1}, ${s.accent2})`,
+    "--canvas-bg": s.canvasBg,
+    "--ink": s.ink,
+    "--font": fontById(s.fontId).stack,
+    "--wb": s.keepAll ? "keep-all" : "normal",
+    "--radius": `${s.radius}px`,
+    "--pad": DENSITY_PAD[s.density],
+    "--h-title": `${s.titleSize}px`,
+    "--h-section": `${s.sectionSize}px`,
+    "--h-standard": `${s.bodySize}px`,
+  };
+}
+
+/** 토큰(기존 템플릿)에서 설정값 복원 — 에디터로 불러올 때. */
+export function tokensToSettings(tokens: Record<string, string>, surround: string): TemplateSettings {
+  const px = (v: string | undefined, d: number) => (v ? parseInt(v, 10) || d : d);
+  const fontId = FONTS.find((f) => f.stack === tokens["--font"])?.id ?? "pretendard";
+  const density = (Object.entries(DENSITY_PAD).find(([, v]) => v === tokens["--pad"])?.[0] as Density) ?? "normal";
+  return {
+    accent1: tokens["--blue"] ?? DEFAULT_SETTINGS.accent1,
+    accent2: tokens["--cyan"] ?? DEFAULT_SETTINGS.accent2,
+    canvasBg: tokens["--canvas-bg"] ?? DEFAULT_SETTINGS.canvasBg,
+    ink: tokens["--ink"] ?? DEFAULT_SETTINGS.ink,
+    surround: surround || DEFAULT_SETTINGS.surround,
+    fontId,
+    keepAll: tokens["--wb"] === "keep-all",
+    radius: px(tokens["--radius"], 10),
+    density,
+    titleSize: px(tokens["--h-title"], 60),
+    sectionSize: px(tokens["--h-section"], 52),
+    bodySize: px(tokens["--h-standard"], 40),
+  };
+}

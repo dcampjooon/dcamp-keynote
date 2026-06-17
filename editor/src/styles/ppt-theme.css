@@ -26,6 +26,14 @@
   --gray: #64748b;
   --grad: linear-gradient(120deg, #2f6df6, #14b8c4);
   --canvas-bg: #fff;
+  /* 템플릿에서 조정 가능한 토큰(기본값) */
+  --font: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --wb: normal;            /* word-break: keep-all로 한글 잘림 방지 가능 */
+  --radius: 10px;          /* callout·카드 모서리 */
+  --pad: 64px 80px;        /* 슬라이드 여백(밀도) */
+  --h-title: 60px;         /* 표지 헤드라인 */
+  --h-section: 52px;       /* 간지 헤드라인 */
+  --h-standard: 40px;      /* 본문 헤드라인 */
   position: relative;
   width: 1280px;
   height: 720px;
@@ -35,7 +43,8 @@
   box-shadow: 0 24px 70px -28px rgba(20, 35, 70, 0.45);
   overflow: hidden;
   transform-origin: center center;
-  font-family: "Pretendard Variable", Pretendard, var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font);
+  word-break: var(--wb);
   letter-spacing: -0.01em;
 }
 /* 그리드 영역(연한 가이드) */
@@ -49,7 +58,7 @@
 .ppt-slide {
   position: absolute;
   inset: 0;
-  padding: 64px 80px;
+  padding: var(--pad);
   display: flex;
   flex-direction: column;
 }
@@ -69,13 +78,13 @@
   margin-bottom: 18px;
 }
 .ppt-headline {
-  font-size: 40px;
+  font-size: var(--h-standard);
   font-weight: 800;
   line-height: 1.22;
   margin: 0 0 8px;
 }
-.layout-title .ppt-headline { font-size: 60px; }
-.layout-section .ppt-headline { font-size: 52px; }
+.layout-title .ppt-headline { font-size: var(--h-title); }
+.layout-section .ppt-headline { font-size: var(--h-section); }
 .ppt-headline .hl {
   background: var(--grad);
   -webkit-background-clip: text;
@@ -120,7 +129,7 @@
 .ppt-callout {
   border-left: 4px solid var(--blue);
   background: #f3f7ff;
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 16px 20px;
   font-size: 20px;
   font-weight: 600;

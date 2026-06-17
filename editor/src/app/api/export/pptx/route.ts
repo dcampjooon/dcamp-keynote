@@ -23,7 +23,10 @@ export async function GET(request: Request) {
 
     const title = deck?.title || "발표";
     const theme = await resolveTheme((deck?.theme as { id?: string } | null)?.id);
-    const buf = await buildPptx(title, rows as unknown as RenderSlide[], theme.tokens["--blue"]);
+    // 웹폰트 → PowerPoint 설치 폰트 매핑(한글 안전 폴백)
+    const fontStack = theme.tokens["--font"] || "";
+    const pptxFont = fontStack.includes("Nanum Myeongjo") ? "Nanum Myeongjo" : fontStack.includes("Noto Sans KR") ? "Noto Sans KR" : "Malgun Gothic";
+    const buf = await buildPptx(title, rows as unknown as RenderSlide[], theme.tokens["--blue"], pptxFont);
     const filename = `${title.replace(/[^\p{L}\p{N}\-_]+/gu, "_").slice(0, 40) || "deck"}.pptx`;
 
     return new Response(new Uint8Array(buf), {

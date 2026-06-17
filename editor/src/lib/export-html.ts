@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Block } from "@/lib/slide-schema";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { DEFAULT_THEME, type Theme } from "@/lib/themes";
+import { DEFAULT_THEME, FONTS, type Theme } from "@/lib/themes";
 import { sanitizeSvg } from "@/lib/sanitize-svg";
 
 async function themeCss(): Promise<string> {
@@ -195,6 +195,8 @@ export async function buildExportHtml(title: string, slides: RenderSlide[], them
   const tokenStyle = Object.entries(theme.tokens)
     .map(([k, v]) => `${k}:${v}`)
     .join(";");
+  const fontUrl = FONTS.find((f) => f.stack === theme.tokens["--font"])?.url || "";
+  const fontLink = fontUrl ? `<link rel="stylesheet" href="${fontUrl}" />` : "";
   return `<!doctype html>
 <html lang="ko">
 <head>
@@ -203,6 +205,7 @@ export async function buildExportHtml(title: string, slides: RenderSlide[], them
 <title>${esc(title)}</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+${fontLink}
 <style>
 ${css}
 ${LAYOUT_CSS}
