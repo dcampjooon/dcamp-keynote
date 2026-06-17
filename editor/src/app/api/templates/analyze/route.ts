@@ -2,7 +2,15 @@
 // ABOUTME: 본문 세부가 아니라 '영역/시스템' 관점으로 분석해 우리 TemplateSettings로 매핑. 결과는 템플릿 에디터에 채워 미세조정 후 저장.
 
 import { z } from "zod";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { writeFile, unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { randomUUID } from "node:crypto";
 import { anthropic, MODEL } from "@/lib/anthropic";
+
+const execFileP = promisify(execFile);
 
 const FONT_IDS = ["pretendard", "noto-sans-kr", "gowun-dodum", "nanum-myeongjo", "ibm-plex-kr"] as const;
 
@@ -79,36 +87,90 @@ const SYSTEM = `당신은 프레젠테이션 레이아웃 분석가다. 업로�
 - 본문 하단에 좌우로 나뉜 영역이 있으면 columns로 그 개수(1/2/3)를 표기하고, 각 컬럼 영역에 옅은 패널 배경이 있으면 colBg(hex)·모서리 colRadius(px)·컬럼 사이 간격 colGap(px)을 추정하라(없으면 colBg는 빈 문자열).
 색은 실제 사용된 hex로. fontSize는 1280x720 기준 px로 추정.`;
 
+export const runtime = "nodejs";
+
+const USER_MSG = "이 샘플 덱의 공통 디자인 시스템을 분석해 템플릿 설정으로 출력하라.";
+
+/** 종량제 API(@anthropic-ai/sdk)로 분석 — 배포 등 구독 인증이 없는 환경용. */
+async function analyzeViaApi(pdfBase64: string): Promise<unknown> {
+  const msg = await anthropic().messages.create({
+    model: MODEL,
+    max_tokens: 8000,
+    system: SYSTEM,
+    tools: [{ name: "emit_template", description: "분석한 디자인 시스템을 템플릿 설정으로 출력한다.", input_schema: TOOL_SCHEMA as never }],
+    tool_choice: { type: "tool", name: "emit_template" },
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
+          { type: "text", text: USER_MSG },
+        ],
+      },
+    ],
+  });
+  const tu = msg.content.find((b) => b.type === "tool_use");
+  if (!tu || tu.type !== "tool_use") throw new Error("분석 실패(tool_use 없음)");
+  return tu.input;
+}
+
+/** 로컬 Claude Code CLI(구독 인증)로 분석 — 추가 종량제 비용 없음. Read 도구로 PDF를 직접 본다. */
+async function analyzeViaCli(pdfPath: string): Promise<unknown> {
+  const prompt = `${SYSTEM}\n\n분석할 PDF(절대경로): ${pdfPath}\nRead 도구로 이 PDF의 모든 페이지를 읽고, 위 기준대로 디자인 시스템을 분석해 structured output(JSON)으로 반환하라. ${USER_MSG}`;
+  const args = [
+    "-p", prompt,
+    "--output-format", "json",
+    "--json-schema", JSON.stringify(TOOL_SCHEMA),
+    "--allowedTools", "Read",
+    "--permission-mode", "bypassPermissions",
+    "--model", MODEL,
+    "--add-dir", dirname(pdfPath),
+  ];
+  // 부모 Claude Code 세션의 CLAUDE_CODE_* 상속을 끊고 구독 토큰만 전달(중첩 인증 꼬임 방지).
+  const env = {
+    HOME: process.env.HOME,
+    PATH: process.env.PATH,
+    CLAUDE_CODE_OAUTH_TOKEN: process.env.CLAUDE_CODE_OAUTH_TOKEN,
+  } as unknown as NodeJS.ProcessEnv;
+  const { stdout } = await execFileP("claude", args, { env, maxBuffer: 16 * 1024 * 1024, timeout: 240_000 });
+  const envelope = JSON.parse(stdout) as { is_error?: boolean; result?: string; structured_output?: unknown };
+  if (envelope.is_error) throw new Error(envelope.result || "CLI 분석 실패");
+  if (envelope.structured_output) return envelope.structured_output;
+  const m = (envelope.result ?? "").match(/\{[\s\S]*\}/); // 폴백: result 텍스트에서 JSON 추출
+  if (!m) throw new Error("CLI 분석 결과에서 JSON을 찾지 못함");
+  return JSON.parse(m[0]);
+}
+
 export async function POST(request: Request) {
+  let tmpPath: string | null = null;
   try {
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "PDF 파일이 필요합니다." }, { status: 400 });
     if (file.type !== "application/pdf") return Response.json({ error: "PDF 파일만 분석할 수 있습니다." }, { status: 400 });
 
-    const data = Buffer.from(await file.arrayBuffer()).toString("base64");
+    const buf = Buffer.from(await file.arrayBuffer());
+    const useCli = (process.env.ANALYZE_PROVIDER ?? "cli").toLowerCase() === "cli";
+    if (useCli && !process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+      return Response.json({ error: "CLAUDE_CODE_OAUTH_TOKEN이 없습니다. `claude setup-token`으로 발급해 .env.local에 넣거나 ANALYZE_PROVIDER=api로 전환하세요." }, { status: 500 });
+    }
+    if (useCli) { tmpPath = join(tmpdir(), `analyze-${randomUUID()}.pdf`); await writeFile(tmpPath, buf); }
+    const pdfBase64 = useCli ? "" : buf.toString("base64");
+    const run = () => (useCli ? analyzeViaCli(tmpPath!) : analyzeViaApi(pdfBase64));
 
-    const msg = await anthropic().messages.create({
-      model: MODEL,
-      max_tokens: 8000,
-      system: SYSTEM,
-      tools: [{ name: "emit_template", description: "분석한 디자인 시스템을 템플릿 설정으로 출력한다.", input_schema: TOOL_SCHEMA as never }],
-      tool_choice: { type: "tool", name: "emit_template" },
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "document", source: { type: "base64", media_type: "application/pdf", data } },
-            { type: "text", text: "이 샘플 덱의 공통 디자인 시스템을 분석해 템플릿 설정으로 출력하라." },
-          ],
-        },
-      ],
-    });
-
-    const tu = msg.content.find((b) => b.type === "tool_use");
-    if (!tu || tu.type !== "tool_use") return Response.json({ error: "분석 실패" }, { status: 502 });
-    const parsed = Analysis.safeParse(tu.input);
-    if (!parsed.success) return Response.json({ error: "분석 결과 형식 오류", detail: parsed.error.issues }, { status: 502 });
+    // 분석 + 검증, 1회 재시도(형식 오류·일시 실패 대비)
+    let parsed: ReturnType<typeof Analysis.safeParse> | null = null;
+    let lastErr = "";
+    let lastIssues: unknown = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let raw: unknown;
+      try { raw = await run(); } catch (e) { lastErr = e instanceof Error ? e.message : "분석 호출 실패"; continue; }
+      const p = Analysis.safeParse(raw);
+      if (p.success) { parsed = p; break; }
+      lastErr = "분석 결과 형식 오류";
+      lastIssues = p.error.issues.slice(0, 12);
+    }
+    if (!parsed) return Response.json({ error: lastErr || "분석 실패", detail: lastIssues }, { status: 502 });
 
     const { name, rationale, layouts: rawLayouts, pageSize, orientation, ...settings } = parsed.data;
     const page = { size: pageSize, orientation };
@@ -124,5 +186,7 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return Response.json({ error: message }, { status: 500 });
+  } finally {
+    if (tmpPath) await unlink(tmpPath).catch(() => {});
   }
 }
