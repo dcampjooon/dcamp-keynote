@@ -5,7 +5,7 @@ import { z } from "zod";
 import { anthropic, MODEL } from "@/lib/anthropic";
 import { SLIDE_SYSTEM, deckContext } from "@/lib/prompts";
 import { Outline, Slide, type SlidePlan } from "@/lib/slide-schema";
-import { supabaseAdmin, DEV_USER_ID } from "@/lib/supabase";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 const SlideContent = Slide.omit({ id: true });
 // 블록 union이 커서 strict structured output은 "grammar too large"로 거부된다.
@@ -22,10 +22,14 @@ export async function POST(request: Request) {
     const outline = parsed.data;
     const themeId = typeof body.themeId === "string" ? body.themeId : "dcamp-white";
 
-    // 1) 덱 생성
-    const { data: deck, error: deckErr } = await supabaseAdmin
+    const supabase = await createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return Response.json({ error: "로그인이 필요합니다." }, { status: 401 });
+
+    // 1) 덱 생성 (owner=세션 사용자, 트리거가 deck_members에 owner 등록 → RLS 통과)
+    const { data: deck, error: deckErr } = await supabase
       .from("decks")
-      .insert({ owner: DEV_USER_ID, title: outline.title || "제목 없는 발표", status: "generating", theme: { id: themeId } })
+      .insert({ owner: user.id, title: outline.title || "제목 없는 발표", status: "generating", theme: { id: themeId } })
       .select()
       .single();
     if (deckErr || !deck) {
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     // ai_job 시작 기록
-    const { data: job } = await supabaseAdmin
+    const { data: job } = await supabase
       .from("ai_jobs")
       .insert({ deck_id: deck.id, kind: "generate_slide", status: "running", input: { outline } })
       .select()
@@ -51,20 +55,20 @@ export async function POST(request: Request) {
       const plan = outline.slides[i];
       const content = await generateSlide(ctx, plan, i + 1, outline.slides.length);
 
-      const { data: row, error: slideErr } = await supabaseAdmin
+      const { data: row, error: slideErr } = await supabase
         .from("slides")
         .insert({ deck_id: deck.id, idx: i, layout: content.layout, title: content.title, blocks: content.blocks, notes: content.notes })
         .select()
         .single();
       if (slideErr || !row) {
-        await supabaseAdmin.from("ai_jobs").update({ status: "failed", error: slideErr?.message }).eq("id", job?.id);
+        await supabase.from("ai_jobs").update({ status: "failed", error: slideErr?.message }).eq("id", job?.id);
         return Response.json({ error: `슬라이드 ${i + 1} 저장 실패: ${slideErr?.message}` }, { status: 500 });
       }
       slides.push({ id: row.id, version: row.version, ...content });
     }
 
-    await supabaseAdmin.from("decks").update({ status: "ready" }).eq("id", deck.id);
-    await supabaseAdmin.from("ai_jobs").update({ status: "succeeded", output: { count: slides.length } }).eq("id", job?.id);
+    await supabase.from("decks").update({ status: "ready" }).eq("id", deck.id);
+    await supabase.from("ai_jobs").update({ status: "succeeded", output: { count: slides.length } }).eq("id", job?.id);
 
     return Response.json({ deckId: deck.id, title: outline.title, subtitle: outline.subtitle, themeId, slides });
   } catch (err) {

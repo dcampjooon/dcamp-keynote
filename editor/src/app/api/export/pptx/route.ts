@@ -3,7 +3,7 @@
 
 import { buildPptx } from "@/lib/export-pptx";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createSupabaseServer } from "@/lib/supabase/server";
 import { themeById } from "@/lib/themes";
 
 export async function GET(request: Request) {
@@ -11,8 +11,9 @@ export async function GET(request: Request) {
     const deckId = new URL(request.url).searchParams.get("deckId");
     if (!deckId) return Response.json({ error: "deckId가 필요합니다." }, { status: 400 });
 
-    const { data: deck } = await supabaseAdmin.from("decks").select("title, theme").eq("id", deckId).single();
-    const { data: rows, error } = await supabaseAdmin
+    const supabase = await createSupabaseServer();
+    const { data: deck } = await supabase.from("decks").select("title, theme").eq("id", deckId).single();
+    const { data: rows, error } = await supabase
       .from("slides")
       .select("id, version, layout, title, blocks, notes")
       .eq("deck_id", deckId)

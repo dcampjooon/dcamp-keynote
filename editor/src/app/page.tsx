@@ -4,7 +4,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +18,12 @@ import { THEMES, themeById } from "@/lib/themes";
 
 type Stage = "idle" | "outlining" | "outline" | "generating" | "ready";
 
+type DeckSummary = { id: string; title: string; theme: { id?: string } | null; updated_at: string };
+
 export default function Home() {
+  const router = useRouter();
   const [stage, setStage] = useState<Stage>("idle");
+  const [decks, setDecks] = useState<DeckSummary[]>([]);
   const [brief, setBrief] = useState("");
   const [sources, setSources] = useState("");
   const [outline, setOutline] = useState<Outline | null>(null);
@@ -28,6 +34,36 @@ export default function Home() {
   const [patchInput, setPatchInput] = useState("");
   const [patching, setPatching] = useState(false);
   const [themeId, setThemeId] = useState("dcamp-white");
+
+  // 내 발표 목록 로드
+  useEffect(() => {
+    void fetch("/api/decks")
+      .then((r) => r.json())
+      .then((d) => setDecks(d.decks ?? []))
+      .catch(() => {});
+  }, []);
+
+  async function openDeck(id: string) {
+    try {
+      const res = await fetch(`/api/deck/${id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "불러오기 실패");
+      setSlides(data.slides);
+      setDeckId(data.deckId);
+      setThemeId(data.themeId);
+      setIndex(0);
+      setEditMode(false);
+      setStage("ready");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "오류");
+    }
+  }
+
+  async function logout() {
+    await createSupabaseBrowser().auth.signOut();
+    router.replace("/login");
+    router.refresh();
+  }
 
   // 개발용: 생성된 덱 JSON을 콘솔/자동화로 주입해 렌더 확인 (window.__loadSlides(arr))
   useEffect(() => {
@@ -159,10 +195,31 @@ export default function Home() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">키노트 에디터</h1>
-            <Badge variant="secondary">M1</Badge>
+            <button onClick={() => void logout()} className="ml-auto text-xs text-muted-foreground hover:underline">
+              로그아웃
+            </button>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">자연어로 설명하면 발표를 설계·생성합니다.</p>
         </div>
+
+        {(stage === "idle" || stage === "outlining") && decks.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">내 발표</label>
+            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
+              {decks.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => void openDeck(d.id)}
+                  className="flex items-center gap-2 rounded-md border px-2.5 py-2 text-left text-sm transition hover:border-muted-foreground/40"
+                >
+                  <span className="truncate">{d.title}</span>
+                  <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{new Date(d.updated_at).toLocaleDateString()}</span>
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-muted-foreground">또는 아래에서 새 발표를 만드세요.</div>
+          </div>
+        )}
 
         {(stage === "idle" || stage === "outlining") && (
           <div className="flex flex-col gap-3">

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { anthropic, MODEL } from "@/lib/anthropic";
 import { PATCH_SYSTEM } from "@/lib/prompts";
 import { Block, Slide } from "@/lib/slide-schema";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 const SlideContent = Slide.omit({ id: true });
 
@@ -73,7 +73,8 @@ export async function POST(request: Request) {
     if (!validated.success) return Response.json({ error: "패치 적용 결과가 유효하지 않음", detail: validated.error.issues }, { status: 502 });
 
     // 낙관적 잠금 저장
-    const { data, error } = await supabaseAdmin
+    const supabase = await createSupabaseServer();
+    const { data, error } = await supabase
       .from("slides")
       .update({ title: validated.data.title, blocks: validated.data.blocks, version: version + 1 })
       .eq("id", slideId)
