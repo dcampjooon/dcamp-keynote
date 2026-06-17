@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Block } from "@/lib/slide-schema";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
-import { DEFAULT_THEME, FONTS, type Theme } from "@/lib/themes";
+import { DEFAULT_THEME, DEFAULT_LAYOUTS, FONTS, layoutForSlide, type LayoutSpec, type Theme } from "@/lib/themes";
 import { sanitizeSvg } from "@/lib/sanitize-svg";
 
 async function themeCss(): Promise<string> {
@@ -131,8 +131,9 @@ function renderBlock(block: Block, delay: number, slideIdx: number, blockIdx: nu
   }
 }
 
-/* ---------- 슬라이드 ---------- */
-function renderSlide(slide: RenderSlide, idx: number): string {
+/* ---------- 슬라이드 (레이아웃 스펙 기반) ---------- */
+function renderSlide(slide: RenderSlide, idx: number, total: number, layouts: LayoutSpec[]): string {
+  const spec = layoutForSlide(slide.layout, layouts);
   const full = slide.blocks.filter((b) => b.column === "full");
   const left = slide.blocks.filter((b) => b.column === "left");
   const right = slide.blocks.filter((b) => b.column === "right");
@@ -141,19 +142,35 @@ function renderSlide(slide: RenderSlide, idx: number): string {
   let i = 0;
   const delay = () => 110 + i++ * 90;
 
-  const isHero = slide.layout === "title" || slide.layout === "section";
+  const isCenter = spec.align === "center";
+  const isMiddle = spec.vAlign === "middle";
+  const heroLike = spec.role === "cover" || spec.role === "section";
   const hasHeading = slide.blocks.some((b) => b.type === "heading");
-  const showTitle = slide.title && !(isHero && hasHeading);
+  const showTitle = slide.title && !(heroLike && hasHeading);
 
   let bi = 0;
   const rb = (b: Block) => renderBlock(b, delay(), idx, bi++);
 
-  const brand = isHero ? `<div class="ppt-brand" data-anim="fade" style="animation-delay:40ms">d·camp &nbsp;|&nbsp; IT팀</div>` : "";
-  const titleEl = showTitle ? `<h2 class="ppt-headline" data-anim="rise" style="animation-delay:${delay()}ms">${esc(slide.title)}</h2>` : "";
+  const sectionStyle = [
+    spec.bg ? `background:${spec.bg}` : "",
+    spec.fg ? `color:${spec.fg}` : "",
+    `align-items:${isCenter ? "center" : "stretch"}`,
+    `justify-content:${isMiddle ? "center" : "flex-start"}`,
+    `text-align:${isCenter ? "center" : "left"}`,
+  ].filter(Boolean).join(";");
+
+  const brand = spec.kicker ? `<div class="ppt-brand" data-anim="fade" style="animation-delay:40ms">d·camp &nbsp;|&nbsp; IT팀</div>` : "";
+  const accentBar =
+    spec.accent !== "none" && spec.accent !== "underline"
+      ? `<div data-anim="scale" style="width:${spec.accent === "block" ? 28 : 56}px;height:${spec.accent === "block" ? 28 : 6}px;border-radius:${spec.accent === "block" ? 6 : 999}px;background:var(--grad);margin:${isCenter ? "0 auto 14px" : "0 0 14px"};animation-delay:60ms"></div>`
+      : "";
+  const titleStyle = `font-size:${spec.titleSize}px;animation-delay:${delay()}ms${spec.accent === "underline" ? ";border-bottom:4px solid var(--blue);padding-bottom:8px;display:inline-block" : ""}`;
+  const titleEl = showTitle ? `<h2 class="ppt-headline" data-anim="rise" style="${titleStyle}">${esc(slide.title)}</h2>` : "";
   const fullEls = full.map(rb).join("");
   const colsEl = hasCols ? `<div class="ppt-cols"><div class="ppt-col">${left.map(rb).join("")}</div><div class="ppt-col">${right.map(rb).join("")}</div></div>` : "";
+  const footer = spec.footer ? `<div style="position:absolute;bottom:28px;right:36px;font-size:14px;color:var(--ink-faint);opacity:.8">${idx + 1} / ${total}</div>` : "";
 
-  return `<section class="ppt-slide layout-${slide.layout}">${brand}${titleEl}${fullEls}${colsEl}</section>`;
+  return `<section class="ppt-slide" style="${sectionStyle}">${brand}${accentBar}${titleEl}${fullEls}${colsEl}${footer}</section>`;
 }
 
 const LAYOUT_CSS = `
@@ -191,7 +208,8 @@ const RUNTIME_JS = `
 
 export async function buildExportHtml(title: string, slides: RenderSlide[], theme: Theme = DEFAULT_THEME): Promise<string> {
   const css = await themeCss();
-  const slidesMarkup = slides.map((s, i) => renderSlide(s, i)).join("\n");
+  const layouts: LayoutSpec[] = theme.layouts && theme.layouts.length ? theme.layouts : DEFAULT_LAYOUTS;
+  const slidesMarkup = slides.map((s, i) => renderSlide(s, i, slides.length, layouts)).join("\n");
   const tokenStyle = Object.entries(theme.tokens)
     .map(([k, v]) => `${k}:${v}`)
     .join(";");

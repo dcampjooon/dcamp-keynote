@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     // 웹폰트 → PowerPoint 설치 폰트 매핑(한글 안전 폴백)
     const fontStack = theme.tokens["--font"] || "";
     const pptxFont = fontStack.includes("Nanum Myeongjo") ? "Nanum Myeongjo" : fontStack.includes("Noto Sans KR") ? "Noto Sans KR" : "Malgun Gothic";
-    const buf = await buildPptx(title, rows as unknown as RenderSlide[], theme.tokens["--blue"], pptxFont);
+    const buf = await buildPptx(title, rows as unknown as RenderSlide[], theme.tokens["--blue"], pptxFont, theme.layouts);
     const filename = `${title.replace(/[^\p{L}\p{N}\-_]+/gu, "_").slice(0, 40) || "deck"}.pptx`;
 
     return new Response(new Uint8Array(buf), {

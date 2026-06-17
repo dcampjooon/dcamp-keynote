@@ -4,6 +4,7 @@
 import PptxGenJS from "pptxgenjs";
 import type { Block } from "@/lib/slide-schema";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
+import { layoutForSlide, DEFAULT_LAYOUTS, type LayoutSpec } from "@/lib/themes";
 
 // 16:9 = 13.333 x 7.5 inch. 캔버스 1280x720 → inch 스케일
 const SLIDE_W = 13.333;
@@ -143,43 +144,50 @@ function addDiagram(slide: Slide, b: Extract<Block, { type: "diagram" }>, rx: nu
   }
 }
 
-/* ---------- 슬라이드 배치 ---------- */
-function layoutSlide(pptx: PptxGenJS, slide: RenderSlide) {
+/* ---------- 슬라이드 배치 (레이아웃 스펙 기반) ---------- */
+function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
   const s = pptx.addSlide();
-  s.background = { color: "FFFFFF" };
+  s.background = { color: (spec.bg || "#FFFFFF").replace(/^#/, "") };
   if (slide.notes) s.addNotes(slide.notes);
 
+  const titleColor = spec.fg ? spec.fg.replace(/^#/, "") : INK;
+  const align = spec.align === "center" ? "center" : "left";
   const full = slide.blocks.filter((b) => b.column === "full");
   const left = slide.blocks.filter((b) => b.column === "left");
   const right = slide.blocks.filter((b) => b.column === "right");
   const hasCols = left.length > 0 || right.length > 0;
-  const isHero = slide.layout === "title" || slide.layout === "section";
+  const heroLike = spec.role === "cover" || spec.role === "section";
   const hasHeading = slide.blocks.some((b) => b.type === "heading");
-  const showTitle = slide.title && !(isHero && hasHeading);
+  const showTitle = slide.title && !(heroLike && hasHeading);
+  const th = Math.max(1.0, spec.titleSize / 40); // 제목 박스 높이(inch) 근사
 
-  // 히어로/센터: 콘텐츠를 세로 중앙 정렬
-  if (isHero || slide.layout === "centered") {
-    if (isHero) s.addText("d·camp  |  IT팀", { x: MX, y: 1.2, w: CW, h: 0.4, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_FAINT, align: "center", charSpacing: 3 });
+  // 세로 중앙 배치
+  if (spec.vAlign === "middle") {
+    if (spec.kicker) s.addText("d·camp  |  IT팀", { x: MX, y: 1.2, w: CW, h: 0.4, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_FAINT, align, charSpacing: 3 });
     const blocks = full;
-    const totalH = (showTitle ? (slide.layout === "title" ? 1.5 : 1.2) : 0) + blocks.reduce((a, b) => a + blockH(b, CW), 0);
+    const totalH = (showTitle ? th : 0) + blocks.reduce((a, b) => a + blockH(b, CW), 0);
     let y = Math.max(MY + 0.6, (SLIDE_H - totalH) / 2);
     if (showTitle) {
-      const fs = slide.layout === "title" ? 60 : slide.layout === "section" ? 52 : 40;
-      s.addText(slide.title, { x: MX, y, w: CW, h: slide.layout === "title" ? 1.5 : 1.2, fontFace: FONT, fontSize: pt(fs), bold: true, color: INK, align: "center", valign: "middle" });
-      y += slide.layout === "title" ? 1.5 : 1.2;
+      s.addText(slide.title, { x: MX, y, w: CW, h: th, fontFace: FONT, fontSize: pt(spec.titleSize), bold: true, color: titleColor, align, valign: "middle" });
+      y += th;
     }
     for (const b of blocks) {
       const h = blockH(b, CW);
-      addCentered(s, b, MX, y, CW, h);
+      if (align === "center") addCentered(s, b, MX, y, CW, h);
+      else addBlock(s, b, MX, y, CW, h);
       y += h + 0.12;
     }
     return;
   }
 
-  // standard / split
+  // 상단 정렬
   let top = MY;
+  if (spec.kicker) {
+    s.addText("d·camp  |  IT팀", { x: MX, y: top, w: CW, h: 0.4, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_FAINT, align, charSpacing: 3 });
+    top += 0.5;
+  }
   if (showTitle) {
-    s.addText(slide.title, { x: MX, y: top, w: CW, h: 0.9, fontFace: FONT, fontSize: pt(40), bold: true, color: INK, valign: "top" });
+    s.addText(slide.title, { x: MX, y: top, w: CW, h: 0.9, fontFace: FONT, fontSize: pt(spec.titleSize), bold: true, color: titleColor, align, valign: "top" });
     top += 1.05;
   }
   if (!hasCols) {
@@ -231,12 +239,13 @@ function addCentered(s: Slide, b: Block, x: number, y: number, w: number, h: num
   s.addText(text, { x, y, w, h, fontFace: FONT, fontSize: pt(fs), bold: b.type !== "paragraph", color: b.type === "paragraph" ? INK_DIM : INK, align: "center", valign: "top" });
 }
 
-export async function buildPptx(title: string, slides: RenderSlide[], accentHex?: string, fontFace?: string): Promise<Buffer> {
+export async function buildPptx(title: string, slides: RenderSlide[], accentHex?: string, fontFace?: string, layouts?: LayoutSpec[]): Promise<Buffer> {
   ACCENT = (accentHex || HEX.blue).replace(/^#/, "");
   FONT = fontFace || "Malgun Gothic";
+  const specs = layouts && layouts.length ? layouts : DEFAULT_LAYOUTS;
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE"; // 13.333 x 7.5
   pptx.title = title;
-  for (const sl of slides) layoutSlide(pptx, sl);
+  for (const sl of slides) layoutSlide(pptx, sl, layoutForSlide(sl.layout, specs));
   return (await pptx.write({ outputType: "nodebuffer" })) as Buffer;
 }
