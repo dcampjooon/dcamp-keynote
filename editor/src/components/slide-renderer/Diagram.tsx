@@ -57,6 +57,26 @@ function center(p: Pos): Pos {
   return { x: p.x + NW / 2, y: p.y + NH / 2 };
 }
 
+/** AI가 라벨에 넣은 \n·공백을 정리하고 최대 2줄(줄당 ~9자)로 래핑한다. */
+function wrapLabel(raw: string): string[] {
+  const s = raw.replace(/\\n|\n/g, " ").replace(/\s+/g, " ").trim();
+  const MAX = 9;
+  if (s.length <= MAX) return [s];
+  // 공백/구분자 근처에서 나눠 2줄로
+  const mid = Math.ceil(s.length / 2);
+  let cut = -1;
+  for (let d = 0; d < 5; d++) {
+    for (const c of [mid - d, mid + d]) {
+      if (c > 0 && c < s.length && /[\s·,/]/.test(s[c])) { cut = c; break; }
+    }
+    if (cut >= 0) break;
+  }
+  const line1 = cut >= 0 ? s.slice(0, cut).trim() : s.slice(0, MAX);
+  let line2 = cut >= 0 ? s.slice(cut).trim() : s.slice(MAX);
+  if (line2.length > MAX) line2 = line2.slice(0, MAX - 1) + "…";
+  return [line1, line2];
+}
+
 export function Diagram({ block }: { block: DiagramBlock }) {
   const uid = useId().replace(/:/g, "");
   const pos = layout(block.nodes, block.kind);
@@ -70,7 +90,8 @@ export function Diagram({ block }: { block: DiagramBlock }) {
       const cb = center(b);
       const mx = (ca.x + cb.x) / 2;
       const d = `M${ca.x},${ca.y} C${mx},${ca.y} ${mx},${cb.y} ${cb.x},${cb.y}`;
-      return { id: `${uid}-e${i}`, d, label: e.label, mid: { x: mx, y: (ca.y + cb.y) / 2 } };
+      const label = e.label.replace(/\\n|\n/g, " ").replace(/\s+/g, " ").trim();
+      return { id: `${uid}-e${i}`, d, label, mid: { x: mx, y: (ca.y + cb.y) / 2 } };
     })
     .filter(Boolean) as { id: string; d: string; label: string; mid: Pos }[];
 
@@ -101,11 +122,21 @@ export function Diagram({ block }: { block: DiagramBlock }) {
         const p = pos[node.id];
         if (!p) return null;
         const c = COLOR[node.color] ?? COLOR.blue;
+        const lines = wrapLabel(node.label);
+        const cy = p.y + NH / 2;
         return (
           <g key={node.id} className="ppt-node">
             <rect x={p.x} y={p.y} width={NW} height={NH} rx={12} stroke={c} strokeWidth={2} />
-            <text x={p.x + NW / 2} y={p.y + NH / 2 + 6} textAnchor="middle" fontSize={17} fill="var(--ink)">
-              {node.label}
+            <text x={p.x + NW / 2} y={cy + (lines.length === 1 ? 6 : -2)} textAnchor="middle" fontSize={15} fill="var(--ink)">
+              {lines.length === 1 ? (
+                lines[0]
+              ) : (
+                lines.map((ln, k) => (
+                  <tspan key={k} x={p.x + NW / 2} dy={k === 0 ? 0 : 18}>
+                    {ln}
+                  </tspan>
+                ))
+              )}
             </text>
           </g>
         );

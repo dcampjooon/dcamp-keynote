@@ -23,6 +23,7 @@ export const SLIDE_SYSTEM = `${TONE}
 - 주어진 슬라이드 계획(purpose/headline/layout/blockHints)과 발표 전체 맥락을 반영한다.
 - title 레이아웃: heading 블록 1개(+선택 subhead). standard/split: 제목(slide.title)에 헤드라인, blocks에 근거.
 - diagram 블록은 nodes/edges 데이터만 채운다(자유 SVG 금지). 색은 출처/도메인 구분에 사용.
+- diagram 노드 label은 매우 짧게(한글 8자 이내, 줄바꿈 문자 금지). 설명은 라벨이 아니라 본문 블록(bullets/callout)에 둔다. 노드는 6개 이하.
 - kpi 블록은 핵심 수치 강조용. bullets는 6개 이하, 각 항목 간결하게.
 - 블록 id는 슬라이드 내 고유한 영문 슬러그로.`;
 

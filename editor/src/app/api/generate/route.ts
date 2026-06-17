@@ -1,13 +1,16 @@
 // ABOUTME: [생성 단계] 라우트. 확정된 아웃라인 → 슬라이드를 하나씩 생성·검증(zod)·DB 저장 → 덱 반환.
 // ABOUTME: 전체 한방 생성 금지(codex 권고). 슬라이드 단위 호출 + 실패 시 1회 리페어. 진행은 ai_jobs로 추적.
 
+import { z } from "zod";
 import { anthropic, MODEL } from "@/lib/anthropic";
 import { SLIDE_SYSTEM, deckContext } from "@/lib/prompts";
 import { Outline, Slide, type SlidePlan } from "@/lib/slide-schema";
 import { supabaseAdmin, DEV_USER_ID } from "@/lib/supabase";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 
 const SlideContent = Slide.omit({ id: true });
+// 블록 union이 커서 strict structured output은 "grammar too large"로 거부된다.
+// → non-strict 도구 호출로 스키마를 '힌트'로 주고, zod로 직접 검증한다(문법 컴파일 회피).
+const SLIDE_TOOL_SCHEMA = z.toJSONSchema(SlideContent) as Record<string, unknown>;
 
 export async function POST(request: Request) {
   try {
@@ -78,15 +81,19 @@ async function generateSlide(ctx: string, plan: SlidePlan, n: number, total: num
 들어갈 요소: ${plan.blockHints.join(" / ")}`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const msg = await anthropic().messages.parse({
+    const msg = await anthropic().messages.create({
       model: MODEL,
       max_tokens: 4000,
-      thinking: { type: "adaptive" },
       system: SLIDE_SYSTEM,
+      tools: [{ name: "emit_slide", description: "이 슬라이드를 블록 스키마로 출력한다.", input_schema: SLIDE_TOOL_SCHEMA as never }],
+      tool_choice: { type: "tool", name: "emit_slide" },
       messages: [{ role: "user", content: `${ctx}\n\n${planText}${attempt > 0 ? "\n\n(이전 출력이 스키마에 맞지 않았다. 스키마를 엄격히 지켜 다시 생성하라.)" : ""}` }],
-      output_config: { format: zodOutputFormat(SlideContent) },
     });
-    if (msg.parsed_output) return msg.parsed_output;
+    const tu = msg.content.find((b) => b.type === "tool_use");
+    if (tu && tu.type === "tool_use") {
+      const parsed = SlideContent.safeParse(tu.input);
+      if (parsed.success) return parsed.data;
+    }
   }
 
   // 폴백: 헤드라인만 담은 최소 슬라이드

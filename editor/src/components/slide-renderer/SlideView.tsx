@@ -17,15 +17,20 @@ export function SlideView({ slide }: { slide: RenderSlide }) {
   let i = 0;
   const delay = () => 110 + i++ * 90;
 
+  // title/section 레이아웃에서 heading 블록이 제목을 대신하면 slide.title은 숨겨 중복을 막는다.
+  const isHero = slide.layout === "title" || slide.layout === "section";
+  const hasHeading = slide.blocks.some((b) => b.type === "heading");
+  const showTitle = slide.title && !(isHero && hasHeading);
+
   return (
     <section className={`ppt-slide layout-${slide.layout}`}>
-      {(slide.layout === "title" || slide.layout === "section") && (
+      {isHero && (
         <div className="ppt-brand" data-anim="fade" style={{ animationDelay: "40ms" }}>
           d·camp &nbsp;|&nbsp; IT팀
         </div>
       )}
 
-      {slide.title && (
+      {showTitle && (
         <h2 className="ppt-headline" data-anim="rise" style={{ animationDelay: `${delay()}ms` }}>
           {slide.title}
         </h2>

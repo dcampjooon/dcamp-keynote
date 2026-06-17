@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,15 @@ export default function Home() {
   const [outline, setOutline] = useState<Outline | null>(null);
   const [slides, setSlides] = useState<RenderSlide[]>([]);
   const [index, setIndex] = useState(0);
+
+  // 개발용: 생성된 덱 JSON을 콘솔/자동화로 주입해 렌더 확인 (window.__loadSlides(arr))
+  useEffect(() => {
+    (window as unknown as { __loadSlides?: (s: RenderSlide[]) => void }).__loadSlides = (s) => {
+      setSlides(s);
+      setIndex(0);
+      setStage("ready");
+    };
+  }, []);
 
   async function makeOutline() {
     if (!brief.trim()) return;
