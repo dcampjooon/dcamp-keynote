@@ -247,6 +247,14 @@ export default function Home() {
               >
                 ⬇ HTML
               </Button>
+              <Button
+                variant="outline"
+                disabled={!deckId}
+                onClick={() => deckId && window.open(`/api/export/pptx?deckId=${deckId}`, "_blank")}
+                title={deckId ? "PowerPoint(.pptx)로 내보내기" : "생성된 발표만 내보낼 수 있습니다"}
+              >
+                ⬇ PPTX
+              </Button>
             </div>
 
             {/* 채팅 패치 — 현재 슬라이드를 자연어로 수정 */}
