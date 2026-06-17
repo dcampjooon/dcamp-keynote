@@ -16,6 +16,7 @@ const RegionZ = z.object({
   sampleText: z.string().default("").describe("PDF에 실제 있던 텍스트 그대로(예: 'PART 01', '2월 KOSPI 전망: 5,100~5,700pt'). line/placeholder는 빈 문자열"),
   fontSize: z.number().default(0).describe("글자 크기 px (1280x720 기준; 큰 번호 100~140, 헤드라인 32~48, 보조 16~22, 본문 14~20). 글자영역만."),
   color: z.string().default("").describe("글자/선 색 hex (빈값이면 레이아웃 기본색)"),
+  bg: z.string().default("").describe("영역 배경 hex (차트/이미지 자리에 옅은 패널 배경이 있으면 그 색, 없으면 빈 문자열)"),
   weight: z.enum(["normal", "bold", "black"]).default("normal"),
   align: z.enum(["left", "center", "right"]).default("left"),
   orient: z.enum(["h", "v"]).default("h").describe("line 방향(가로/세로)"),
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
     const layouts = rawLayouts.map((l) => {
       const n = (roleCount[l.role] = (roleCount[l.role] ?? 0) + 1);
       const id = n > 1 ? `${l.role}-${n}` : l.role;
-      const regions = (l.regions ?? []).map((r, ri) => ({ ...r, id: `${id}-r${ri}` }));
+      const regions = (l.regions ?? []).map((r, ri) => ({ ...r, id: `${id}-r${ri}`, bg: r.bg || (r.kind === "placeholder" ? "#ffffff" : "") }));
       const columns = (l.columns >= 3 ? 3 : l.columns >= 2 ? 2 : 1) as 1 | 2 | 3;
       return { ...l, columns, id, regions };
     });

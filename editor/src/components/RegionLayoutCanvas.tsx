@@ -115,7 +115,7 @@ export function RegionLayoutCanvas({
           }
           if (r.kind === "placeholder") {
             return (
-              <div key={r.id} style={{ ...common, border: "2px dashed var(--line)", borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)", fontSize: 16 }}
+              <div key={r.id} style={{ ...common, background: r.bg || "transparent", borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)", fontSize: 16, outline: sel ? "2px solid var(--blue)" : editable ? "2px dashed rgba(47,109,246,.55)" : "1px dashed var(--line)" }}
                 onPointerDown={(e) => drag(e, r.id, "move")}>
                 {r.label === "chart" ? "📊 차트 영역" : r.sampleText || r.label}
                 {sel && <Handles onResize={(e) => drag(e, r.id, "resize")} />}
@@ -128,7 +128,7 @@ export function RegionLayoutCanvas({
           return (
             <div
               key={r.id}
-              style={{ ...common, fontSize: r.fontSize || (r.kind === "footer" ? 13 : 20), color, fontWeight, textAlign: r.align || "left", display: "flex", alignItems: "center", justifyContent: r.align === "center" ? "center" : r.align === "right" ? "flex-end" : "flex-start", lineHeight: 1.2, overflow: "hidden", outline: sel ? "2px solid var(--blue)" : editable ? "1px dashed rgba(47,109,246,.3)" : "none" }}
+              style={{ ...common, background: r.bg || undefined, fontSize: r.fontSize || (r.kind === "footer" ? 13 : 20), color, fontWeight, textAlign: r.align || "left", display: "flex", alignItems: "center", justifyContent: r.align === "center" ? "center" : r.align === "right" ? "flex-end" : "flex-start", lineHeight: 1.2, overflow: "hidden", outline: sel ? "2px solid var(--blue)" : editable ? "1px dashed rgba(47,109,246,.3)" : "none" }}
               onPointerDown={(e) => drag(e, r.id, "move")}
             >
               <span style={{ whiteSpace: "pre-wrap" }}>{r.sampleText || `〔${r.label}〕`}</span>

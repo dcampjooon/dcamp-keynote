@@ -5,10 +5,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { renderPdfPageToDataUrl } from "@/lib/pdf-render";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DeckView } from "@/components/slide-renderer/DeckView";
 import { RegionLayoutCanvas } from "@/components/RegionLayoutCanvas";
@@ -57,7 +55,6 @@ function sampleForRole(role: LayoutRole): RenderSlide {
 }
 
 export function TemplateEditor({ initial, templateId }: { initial?: Theme; templateId?: string }) {
-  const router = useRouter();
   const readOnly = !!initial?.builtin;
   const [name, setName] = useState(initial ? (readOnly ? `${initial.name} 복사본` : initial.name) : "새 템플릿");
   const [s, setS] = useState<TemplateSettings>(initial ? tokensToSettings(initial.tokens, initial.surround) : DEFAULT_SETTINGS);
@@ -65,7 +62,8 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const [sel, setSel] = useState(0);
   const [selReg, setSelReg] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [tid, setTid] = useState<string | undefined>(templateId);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pdfBuf, setPdfBuf] = useState<ArrayBuffer | null>(null);
   const [overlayOn, setOverlayOn] = useState(false);
   const [overlayUrl, setOverlayUrl] = useState("");
@@ -98,7 +96,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
   const setRegion = (patch: Partial<Region>) => setRegions(regions.map((r) => (r.id === selReg ? { ...r, ...patch } : r)));
   const addRegion = () => {
     const id = `${cur.id}-r${Date.now().toString(36)}`;
-    setRegions([...regions, { id, kind: "text", label: "text", x: 12, y: 12, w: 40, h: 10, sampleText: "텍스트", fontSize: 20, color: "", weight: "normal", align: "left", orient: "h", thickness: 3 }]);
+    setRegions([...regions, { id, kind: "text", label: "text", x: 12, y: 12, w: 40, h: 10, sampleText: "텍스트", fontSize: 20, color: "", bg: "", weight: "normal", align: "left", orient: "h", thickness: 3 }]);
     setSelReg(id);
   };
   const removeRegion = () => { if (region) { setRegions(regions.filter((r) => r.id !== selReg)); setSelReg(""); } };
@@ -132,7 +130,8 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
       setPdfBuf(buf);
       setPdfDirty(true);
       pageCache.current.clear();
-      setLogs((l) => [...l, `✅ 완료 — 레이아웃 ${n}종 추출${data.rationale ? `\n   ${data.rationale}` : ""}`]);
+      setLogs([]); // 완료되면 로그 숨김
+      forceSaveOnce.current = true; // 업로드 완료 → 새 템플릿으로 자동 생성
       setReady(true);
     } catch (e) {
       clearInterval(iv);
@@ -153,9 +152,14 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
     setSel(0);
   }
 
-  async function save() {
-    if (!name.trim()) return toast.error("이름을 입력하세요.");
-    setSaving(true);
+  // 자동저장: 생성/수정을 자동 판별. 동시 저장 방지 + 저장 중 변경되면 재실행.
+  const savingRef = useRef(false);
+  const rerunRef = useRef(false);
+  const tidRef = useRef<string | undefined>(templateId);
+  async function persist() {
+    if (savingRef.current) { rerunRef.current = true; return; }
+    savingRef.current = true;
+    setSaveState("saving");
     try {
       // 새로 분석한 PDF가 있으면 Storage에 저장해 언제든 원본 비교 가능하게
       let savedPdfPath = pdfPath;
@@ -166,23 +170,42 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
         const upd = await up.json();
         if (up.ok && upd.path) { savedPdfPath = upd.path; setPdfPath(upd.path); setPdfDirty(false); }
       }
-      const isUpdate = !!templateId && !readOnly;
-      const res = await fetch(isUpdate ? `/api/templates/${templateId}` : "/api/templates", {
+      const id = tidRef.current;
+      const isUpdate = !!id && !(readOnly && id === templateId);
+      const res = await fetch(isUpdate ? `/api/templates/${id}` : "/api/templates", {
         method: isUpdate ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts, pdfPath: savedPdfPath, page }),
+        body: JSON.stringify({ name: name.trim() || "새 템플릿", desc: "", tokens, surround: s.surround, swatch: [s.accent1, s.accent2], layouts, pdfPath: savedPdfPath, page }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "저장 실패");
-      toast.success("템플릿을 저장했습니다.");
-      router.push("/templates");
-      router.refresh();
+      if (!isUpdate && data.template?.id) { tidRef.current = data.template.id; setTid(data.template.id); }
+      setSaveState("saved");
     } catch (e) {
+      setSaveState("error");
       toast.error(e instanceof Error ? e.message : "오류");
     } finally {
-      setSaving(false);
+      savingRef.current = false;
+      if (rerunRef.current) { rerunRef.current = false; void persist(); }
     }
   }
+
+  // 변경 디바운스 자동저장(기존 템플릿 최초 로드는 건너뜀, PDF 분석 직후엔 강제 1회 저장)
+  const snap = useMemo(
+    () => JSON.stringify({ name, tokens, layouts, page, surround: s.surround, swatch: [s.accent1, s.accent2] }),
+    [name, tokens, layouts, page, s.surround, s.accent1, s.accent2],
+  );
+  const initialSnap = useRef<string | null>(null);
+  const forceSaveOnce = useRef(false);
+  useEffect(() => {
+    if (!ready || analyzing) return;
+    if (initialSnap.current === null && !forceSaveOnce.current) { initialSnap.current = snap; return; }
+    forceSaveOnce.current = false;
+    initialSnap.current = snap;
+    const t = setTimeout(() => { void persist(); }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snap, ready, analyzing]);
 
   const sample = sampleForRole(cur.role);
   const canOverlay = !!pdfBuf && !!cur.sourcePage;
@@ -317,7 +340,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
                 <div className="flex flex-col gap-1.5 rounded-md bg-muted/40 p-2">
                   <Row label="역할"><Input value={region.label} onChange={(e) => setRegion({ label: e.target.value })} className="h-7 w-36 text-xs" /></Row>
                   <Row label="종류">
-                    <select value={region.kind} onChange={(e) => setRegion({ kind: e.target.value as RegionKind })} className="h-7 rounded border bg-background px-1 text-xs">
+                    <select value={region.kind} onChange={(e) => { const k = e.target.value as RegionKind; setRegion(k === "placeholder" && !region.bg ? { kind: k, bg: "#ffffff" } : { kind: k }); }} className="h-7 rounded border bg-background px-1 text-xs">
                       <option value="text">텍스트</option><option value="line">선</option><option value="placeholder">차트/이미지</option><option value="footer">푸터</option>
                     </select>
                   </Row>
@@ -354,6 +377,14 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
                       <input type="color" value={region.color || "#16233d"} disabled={!region.color} onChange={(e) => setRegion({ color: e.target.value })} className="h-7 w-9 cursor-pointer rounded border disabled:opacity-40" />
                     </span>
                   </Row>
+                  {region.kind !== "line" && (
+                    <Row label="배경색">
+                      <span className="flex items-center gap-2">
+                        <input type="checkbox" checked={!!region.bg} onChange={(e) => setRegion({ bg: e.target.checked ? "#ffffff" : "" })} className="size-4" />
+                        <input type="color" value={region.bg || "#ffffff"} disabled={!region.bg} onChange={(e) => setRegion({ bg: e.target.value })} className="h-7 w-9 cursor-pointer rounded border disabled:opacity-40" />
+                      </span>
+                    </Row>
+                  )}
                   <button className="self-start text-xs text-destructive hover:underline" onClick={removeRegion}>영역 삭제</button>
                 </div>
               )}
@@ -392,7 +423,10 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
             <ColorField label="발표 모드 바깥 배경" value={s.surround} onChange={(v) => set("surround", v)} />
           </div>
 
-          <Button onClick={() => void save()} disabled={saving}>{saving ? "저장 중…" : templateId && !readOnly ? "수정 저장" : "새 템플릿으로 저장"}</Button>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className={`inline-block size-2 rounded-full ${saveState === "saving" ? "animate-pulse bg-amber-500" : saveState === "error" ? "bg-destructive" : "bg-emerald-500"}`} />
+            {saveState === "saving" ? "자동 저장 중…" : saveState === "error" ? "저장 실패 — 변경 시 재시도" : saveState === "saved" ? "자동 저장됨" : "변경하면 자동 저장됩니다"}
+          </div>
           </>
           )}
         </aside>

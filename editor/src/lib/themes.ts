@@ -29,6 +29,7 @@ export type Region = {
   sampleText?: string; // PDF의 실제 텍스트(미리보기용)
   fontSize?: number; // px
   color?: string; // hex (빈값=레이아웃 fg/기본 ink)
+  bg?: string; // 영역 배경 hex (빈값=배경 없음; 차트 영역은 기본 흰색)
   weight?: "normal" | "bold" | "black";
   align?: "left" | "center" | "right";
   orient?: "h" | "v"; // line 방향
