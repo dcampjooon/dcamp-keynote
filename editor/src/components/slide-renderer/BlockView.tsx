@@ -1,13 +1,14 @@
-// ABOUTME: 블록 1개를 PPT 캔버스 위 요소로 렌더. heading 강조(hl), kpi 카운트업, diagram 위임을 담당.
-// ABOUTME: data-anim 속성으로 등장 애니메이션을, animationDelay로 stagger를 건다.
+// ABOUTME: 블록 1개를 PPT 캔버스 위 요소로 렌더. heading 강조(hl), kpi 카운트업, diagram 위임, 인라인 편집을 담당.
+// ABOUTME: editable이면 텍스트를 contentEditable로 직접 수정하고 onPatch로 변경분(부분 블록)을 올려보낸다.
 
 "use client";
 
 import { useEffect, useState } from "react";
 import type { Block } from "@/lib/slide-schema";
 import { Diagram } from "./Diagram";
+import { Editable } from "./Editable";
 
-/** 헤드라인의 accent 부분을 그라데이션 강조로 감싼다. */
+/** 헤드라인의 accent 부분을 그라데이션 강조로 감싼다(보기 모드 전용). */
 function Highlighted({ text, accent }: { text: string; accent: string }) {
   if (accent && text.includes(accent)) {
     const [before, after] = text.split(accent);
@@ -45,49 +46,89 @@ function CountUp({ to, suffix }: { to: number; suffix: string }) {
   );
 }
 
-export function BlockView({ block, delay }: { block: Block; delay: number }) {
+export type BlockPatch = Partial<Block>;
+
+export function BlockView({
+  block,
+  delay,
+  editable = false,
+  onPatch,
+}: {
+  block: Block;
+  delay: number;
+  editable?: boolean;
+  onPatch?: (partial: BlockPatch) => void;
+}) {
   const anim = { "data-anim": block.anim, style: { animationDelay: `${delay}ms` } } as const;
+  const animStyle = { animationDelay: `${delay}ms` };
+  const patch = (p: BlockPatch) => onPatch?.(p);
 
   switch (block.type) {
     case "heading":
-      return (
+      return editable ? (
+        <Editable as="h2" className="ppt-headline" value={block.text} editable onCommit={(t) => patch({ text: t })} dataAnim={block.anim} style={animStyle} />
+      ) : (
         <h2 className="ppt-headline" {...anim}>
           <Highlighted text={block.text} accent={block.accent} />
         </h2>
       );
     case "subhead":
-      return (
-        <div className="ppt-subhead" {...anim}>
-          {block.text}
-        </div>
-      );
+      return <Editable as="div" className="ppt-subhead" value={block.text} editable={editable} onCommit={(t) => patch({ text: t })} dataAnim={block.anim} style={animStyle} />;
     case "paragraph":
-      return (
-        <p className="ppt-para" {...anim}>
-          {block.text}
-        </p>
-      );
+      return <Editable as="p" className="ppt-para" value={block.text} editable={editable} onCommit={(t) => patch({ text: t })} dataAnim={block.anim} style={animStyle} />;
     case "bullets":
       return (
         <ul className="ppt-bullets" {...anim}>
           {block.items.map((it, i) => (
-            <li key={i}>{it}</li>
+            <Editable
+              key={i}
+              as="li"
+              value={it}
+              editable={editable}
+              onCommit={(t) => patch({ items: block.items.map((x, k) => (k === i ? t : x)) } as BlockPatch)}
+            />
           ))}
         </ul>
       );
     case "callout":
       return (
-        <div className={`ppt-callout tone-${block.tone}`} {...anim}>
-          {block.text}
-        </div>
+        <Editable
+          as="div"
+          className={`ppt-callout tone-${block.tone}`}
+          value={block.text}
+          editable={editable}
+          onCommit={(t) => patch({ text: t })}
+          dataAnim={block.anim}
+          style={animStyle}
+        />
       );
     case "kpi":
       return (
         <div className="ppt-kpis" {...anim}>
           {block.items.map((k, i) => (
             <div className="ppt-kpi" key={i}>
-              <CountUp to={k.value} suffix={k.suffix} />
-              <span className="lbl">{k.label}</span>
+              {editable ? (
+                <Editable
+                  as="span"
+                  className="num"
+                  value={`${k.value.toLocaleString()}${k.suffix}`}
+                  editable
+                  onCommit={(t) => {
+                    const num = parseInt(t.replace(/[^\d-]/g, ""), 10);
+                    const suffix = t.replace(/[\d,.\s-]/g, "");
+                    patch({ items: block.items.map((x, j) => (j === i ? { ...x, value: isNaN(num) ? x.value : num, suffix } : x)) } as BlockPatch);
+                  }}
+                />
+              ) : (
+                <CountUp to={k.value} suffix={k.suffix} />
+              )}
+              <Editable
+                as="span"
+                className="lbl"
+                value={k.label}
+                editable={editable}
+                onCommit={(t) => patch({ items: block.items.map((x, j) => (j === i ? { ...x, label: t } : x)) } as BlockPatch)}
+              />
             </div>
           ))}
         </div>

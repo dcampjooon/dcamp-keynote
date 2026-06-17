@@ -22,6 +22,10 @@ export default function Home() {
   const [outline, setOutline] = useState<Outline | null>(null);
   const [slides, setSlides] = useState<RenderSlide[]>([]);
   const [index, setIndex] = useState(0);
+  const [deckId, setDeckId] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [patchInput, setPatchInput] = useState("");
+  const [patching, setPatching] = useState(false);
 
   // 개발용: 생성된 덱 JSON을 콘솔/자동화로 주입해 렌더 확인 (window.__loadSlides(arr))
   useEffect(() => {
@@ -63,6 +67,7 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "슬라이드 생성 실패");
       setSlides(data.slides);
+      setDeckId(data.deckId);
       setIndex(0);
       setStage("ready");
       toast.success(`${data.slides.length}장 생성 완료`);
@@ -76,7 +81,71 @@ export default function Home() {
     setStage("idle");
     setOutline(null);
     setSlides([]);
+    setDeckId(null);
+    setEditMode(false);
     setIndex(0);
+  }
+
+  // 인라인 편집을 로컬에 즉시 반영하고 DB에 저장(낙관적 잠금)
+  function commitSlide(updated: RenderSlide) {
+    setSlides((prev) => prev.map((s, i) => (i === index ? updated : s)));
+    void saveSlide(updated);
+  }
+
+  async function saveSlide(s: RenderSlide) {
+    if (!s.id || s.version == null) return; // 샘플 덱(미저장)은 로컬 편집만
+    try {
+      const res = await fetch("/api/slide", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slideId: s.id, version: s.version, title: s.title, notes: s.notes, layout: s.layout, blocks: s.blocks }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSlides((prev) => prev.map((x) => (x.id === s.id ? { ...x, version: data.version } : x)));
+      } else if (res.status === 409) {
+        toast.error("편집 충돌 — 다른 곳에서 먼저 수정됨. 새로고침이 필요합니다.");
+      } else {
+        toast.error(data.error || "저장 실패");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "저장 오류");
+    }
+  }
+
+  function editBlock(blockId: string, partial: Record<string, unknown>) {
+    const s = slides[index];
+    commitSlide({ ...s, blocks: s.blocks.map((b) => (b.id === blockId ? { ...b, ...partial } : b)) as RenderSlide["blocks"] });
+  }
+  function editTitle(text: string) {
+    commitSlide({ ...slides[index], title: text });
+  }
+
+  // 채팅 패치: 자연어 지시 → AI 패치 커맨드 → 적용·저장 → 현재 슬라이드 갱신
+  async function sendPatch() {
+    const s = slides[index];
+    if (!patchInput.trim() || patching) return;
+    if (!s.id || s.version == null) {
+      toast.error("샘플 덱은 채팅 수정 대상이 아닙니다. 먼저 발표를 생성하세요.");
+      return;
+    }
+    setPatching(true);
+    try {
+      const res = await fetch("/api/patch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slideId: s.id, version: s.version, instruction: patchInput, slide: { layout: s.layout, title: s.title, blocks: s.blocks, notes: s.notes } }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "수정 실패");
+      setSlides((prev) => prev.map((x, i) => (i === index ? (data.slide as RenderSlide) : x)));
+      setPatchInput("");
+      toast.success(data.reply || "수정 완료");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "수정 오류");
+    } finally {
+      setPatching(false);
+    }
   }
 
   return (
@@ -160,16 +229,41 @@ export default function Home() {
         {stage === "ready" && (
           <div className="flex flex-col gap-3">
             <div className="rounded-md bg-primary/10 p-3 text-sm">
-              <div className="font-semibold">{slides.length}장 생성 완료</div>
-              <p className="mt-1 text-muted-foreground">미리보기에서 ←/→ 로 이동하세요.</p>
+              <div className="font-semibold">{slides.length}장 · {index + 1}번째</div>
+              <p className="mt-1 text-muted-foreground">
+                {editMode ? "텍스트를 클릭해 직접 수정하세요. (자동 저장)" : "미리보기에서 ←/→ 로 이동하세요."}
+              </p>
             </div>
+
+            <Button variant={editMode ? "default" : "outline"} onClick={() => setEditMode((v) => !v)}>
+              {editMode ? "편집 종료" : "✏️ 인라인 편집"}
+            </Button>
+
+            {/* 채팅 패치 — 현재 슬라이드를 자연어로 수정 */}
+            <div className="flex flex-col gap-2 rounded-md border p-3">
+              <div className="text-xs font-bold text-muted-foreground">이 슬라이드 수정 요청 · {index + 1}장</div>
+              <Textarea
+                value={patchInput}
+                onChange={(e) => setPatchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void sendPatch(); }
+                }}
+                placeholder="예: 헤드라인을 더 강하게 / 불릿 하나 추가 / 마지막 항목 삭제 (⌘+Enter)"
+                rows={2}
+                disabled={patching}
+              />
+              <Button size="sm" onClick={() => void sendPatch()} disabled={patching || !patchInput.trim()}>
+                {patching ? "수정 중…" : "수정 요청"}
+              </Button>
+            </div>
+
             {slides[index]?.notes && (
               <div className="rounded-md border p-3 text-sm">
                 <div className="mb-1 text-xs font-bold text-muted-foreground">발표자 노트 · {index + 1}장</div>
                 {slides[index].notes}
               </div>
             )}
-            <Button variant="outline" onClick={reset}>새 발표 만들기</Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={reset}>새 발표 만들기</Button>
           </div>
         )}
       </aside>
@@ -177,7 +271,14 @@ export default function Home() {
       {/* 우: 미리보기 */}
       <section className="flex h-full min-w-0 flex-col bg-muted/40 p-6">
         {slides.length > 0 ? (
-          <DeckView slides={slides} index={index} onIndexChange={setIndex} />
+          <DeckView
+            slides={slides}
+            index={index}
+            onIndexChange={setIndex}
+            editable={editMode}
+            onBlockPatch={editBlock}
+            onTitleCommit={editTitle}
+          />
         ) : (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
             왼쪽에서 발표를 설계하면 여기에 16:9 미리보기가 나타납니다.

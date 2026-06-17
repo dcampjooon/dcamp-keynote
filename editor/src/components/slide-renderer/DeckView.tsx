@@ -1,16 +1,30 @@
 // ABOUTME: 미리보기의 무대. 1280x720 흰 캔버스를 가용 영역에 맞춰 스케일하고, 슬라이드 네비(←/→·클릭·dots)를 제공.
-// ABOUTME: 슬라이드 변경 시 key를 바꿔 SlideView를 remount → 등장 애니메이션이 재생된다.
+// ABOUTME: editable이면 인라인 편집 콜백을 SlideView로 내리고, 텍스트 클릭을 막지 않도록 클릭 네비를 끈다.
 
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { SlideView, type RenderSlide } from "./SlideView";
+import type { BlockPatch } from "./BlockView";
 
-export function DeckView({ slides, index, onIndexChange }: { slides: RenderSlide[]; index: number; onIndexChange: (i: number) => void }) {
+export function DeckView({
+  slides,
+  index,
+  onIndexChange,
+  editable = false,
+  onBlockPatch,
+  onTitleCommit,
+}: {
+  slides: RenderSlide[];
+  index: number;
+  onIndexChange: (i: number) => void;
+  editable?: boolean;
+  onBlockPatch?: (blockId: string, partial: BlockPatch) => void;
+  onTitleCommit?: (text: string) => void;
+}) {
   const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // 16:9 캔버스를 가용 영역에 맞춰 스케일
   useLayoutEffect(() => {
     const frame = frameRef.current;
     const canvas = canvasRef.current;
@@ -34,8 +48,8 @@ export function DeckView({ slides, index, onIndexChange }: { slides: RenderSlide
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const t = e.target as HTMLElement;
+      if (t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || t?.isContentEditable) return;
       if (["ArrowRight", " "].includes(e.key)) { e.preventDefault(); go(index + 1); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
       else if (e.key === "Home") go(0);
@@ -51,14 +65,19 @@ export function DeckView({ slides, index, onIndexChange }: { slides: RenderSlide
     <div className="flex h-full min-w-0 flex-col gap-3">
       <div ref={frameRef} className="ppt-frame relative min-w-0 flex-1 overflow-hidden">
         <div ref={canvasRef} className="ppt-canvas play">
-          {current && <SlideView key={index} slide={current} />}
+          {current && (
+            <SlideView key={index} slide={current} editable={editable} onBlockPatch={onBlockPatch} onTitleCommit={onTitleCommit} />
+          )}
         </div>
-        {/* 클릭 네비 (좌 16% 이전 / 그 외 다음) */}
-        <button aria-label="이전" className="absolute inset-y-0 left-0 w-[16%] cursor-w-resize" onClick={() => go(index - 1)} />
-        <button aria-label="다음" className="absolute inset-y-0 right-0 w-[84%] cursor-e-resize" onClick={() => go(index + 1)} />
+        {/* 클릭 네비 — 편집 모드에서는 텍스트 클릭을 막지 않도록 끈다 */}
+        {!editable && (
+          <>
+            <button aria-label="이전" className="absolute inset-y-0 left-0 w-[16%] cursor-w-resize" onClick={() => go(index - 1)} />
+            <button aria-label="다음" className="absolute inset-y-0 right-0 w-[84%] cursor-e-resize" onClick={() => go(index + 1)} />
+          </>
+        )}
       </div>
 
-      {/* dots + 카운터 */}
       <div className="flex items-center justify-center gap-3">
         <div className="flex flex-wrap items-center justify-center gap-1.5">
           {slides.map((_, i) => (

@@ -280,3 +280,8 @@
 @keyframes ppt-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes ppt-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ppt-scale { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+
+/* 인라인 편집 단서 */
+[data-editable] { border-radius: 6px; transition: background .15s, box-shadow .15s; cursor: text; }
+[data-editable]:hover { background: rgba(47, 109, 246, 0.07); box-shadow: 0 0 0 2px rgba(47, 109, 246, 0.15); }
+[data-editable]:focus { outline: none; background: rgba(47, 109, 246, 0.06); box-shadow: 0 0 0 2px var(--blue); }

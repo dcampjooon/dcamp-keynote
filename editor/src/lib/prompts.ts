@@ -27,6 +27,16 @@ export const SLIDE_SYSTEM = `${TONE}
 - kpi 블록은 핵심 수치 강조용. bullets는 6개 이하, 각 항목 간결하게.
 - 블록 id는 슬라이드 내 고유한 영문 슬러그로.`;
 
+export const PATCH_SYSTEM = `${TONE}
+
+지금은 [편집 단계]다. 사용자가 특정 슬라이드를 자연어로 수정해 달라고 한다.
+현재 슬라이드의 블록(각 id 포함)이 주어진다. 요청을 반영하는 최소한의 패치 커맨드만 출력하라.
+- set_title: 슬라이드 헤드라인 변경
+- update: 기존 블록 1개를 통째로 교체(blockId는 기존 id 그대로, block.id도 같게)
+- insert: 새 블록 추가(afterBlockId 뒤에, 비우면 맨 끝). block.id는 새 슬러그
+- delete: 블록 제거
+요청과 무관한 블록은 건드리지 마라. reply에는 무엇을 바꿨는지 한 문장으로 적어라.`;
+
 /** 발표 전체 맥락을 슬라이드 생성 호출에 압축해 전달(캐시 친화적으로 앞쪽 고정). */
 export function deckContext(title: string, storyline: string, planSummaries: string[]): string {
   return `발표 제목: ${title}

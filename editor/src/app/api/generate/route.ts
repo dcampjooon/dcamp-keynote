@@ -52,14 +52,14 @@ export async function POST(request: Request) {
 
       const { data: row, error: slideErr } = await supabaseAdmin
         .from("slides")
-        .insert({ deck_id: deck.id, idx: i, layout: content.layout, blocks: content.blocks, notes: content.notes })
+        .insert({ deck_id: deck.id, idx: i, layout: content.layout, title: content.title, blocks: content.blocks, notes: content.notes })
         .select()
         .single();
       if (slideErr || !row) {
         await supabaseAdmin.from("ai_jobs").update({ status: "failed", error: slideErr?.message }).eq("id", job?.id);
         return Response.json({ error: `슬라이드 ${i + 1} 저장 실패: ${slideErr?.message}` }, { status: 500 });
       }
-      slides.push({ id: row.id, ...content });
+      slides.push({ id: row.id, version: row.version, ...content });
     }
 
     await supabaseAdmin.from("decks").update({ status: "ready" }).eq("id", deck.id);
