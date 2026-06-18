@@ -195,7 +195,8 @@ export default function EditorPage() {
               <label className="text-sm font-medium">발표 내용 설명</label>
               <Textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="예: 디캠프 통합DB와 전사 AX의 지금까지 실적과 다음 단계를 전 직원에게 공유하는 발표" rows={5} disabled={stage === "outlining"} />
               <label className="text-sm font-medium">참고 소스 (선택)</label>
-              <Textarea value={sources} onChange={(e) => setSources(e.target.value)} placeholder="붙여넣을 사실·수치·맥락 자료" rows={4} disabled={stage === "outlining"} />
+              <Textarea value={sources} onChange={(e) => setSources(e.target.value)} placeholder="붙여넣을 사실·수치·맥락 자료. 공개 구글 독스/웹 URL을 붙여도 본문을 자동으로 읽어옵니다." rows={4} disabled={stage === "outlining"} />
+              <p className="-mt-1 text-xs text-muted-foreground">URL을 넣으면 서버가 본문을 가져옵니다(공개 문서만). 비공개면 본문을 직접 붙여넣으세요.</p>
               <div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">템플릿</label>
