@@ -32,7 +32,7 @@ export function StorylineBoard({ outline, onChange }: { outline: Outline; onChan
     });
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-3xl flex-col gap-3 overflow-y-auto p-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 min-h-0 flex-col gap-3 overflow-y-auto p-6">
       <div className="text-sm text-muted-foreground">
         슬라이드별 스토리라인을 다듬고, 참고 자료를 붙여넣으세요. 확정하면 이 내용으로 발표를 생성합니다.
       </div>

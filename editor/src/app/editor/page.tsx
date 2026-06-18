@@ -31,6 +31,7 @@ export default function EditorPage() {
   const [patching, setPatching] = useState(false);
   const [themeId, setThemeId] = useState("dcamp-white");
   const [templates, setTemplates] = useState<Theme[]>([]);
+  const [outlineLogs, setOutlineLogs] = useState<string[]>([]);
 
   const theme = templates.find((t) => t.id === themeId) ?? DEFAULT_THEME;
 
@@ -77,6 +78,21 @@ export default function EditorPage() {
   async function makeOutline() {
     if (!brief.trim()) return;
     setStage("outlining");
+    const hasUrl = /https?:\/\//.test(sources);
+    const STEPS = [
+      "📝 발표 내용·소스 정리 중…",
+      ...(hasUrl ? ["🔗 참고 URL 본문 가져오는 중…"] : []),
+      "🧭 스토리라인(메시지 흐름) 설계 중…",
+      "🗂 슬라이드별 헤드라인·구성 잡는 중…",
+    ];
+    setOutlineLogs([STEPS[0]]);
+    let i = 1;
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      if (i < STEPS.length) { setOutlineLogs((l) => [...l, STEPS[i++]]); return; }
+      const sec = Math.round((Date.now() - t0) / 1000);
+      setOutlineLogs((l) => [...l.slice(0, STEPS.length), `⏳ 설계 중… (${sec}s 경과 · 보통 15~50초, 자료가 많으면 더)`]);
+    }, 1500);
     try {
       const res = await fetch("/api/outline", {
         method: "POST",
@@ -84,10 +100,14 @@ export default function EditorPage() {
         body: JSON.stringify({ brief, sources }),
       });
       const data = await res.json();
+      clearInterval(iv);
       if (!res.ok) throw new Error(data.error || "아웃라인 생성 실패");
       setOutline(data.outline);
+      setOutlineLogs([]);
       setStage("storyline");
     } catch (e) {
+      clearInterval(iv);
+      setOutlineLogs([]);
       toast.error(e instanceof Error ? e.message : "오류");
       setStage("idle");
     }
@@ -272,8 +292,16 @@ export default function EditorPage() {
           )}
         </aside>
 
-        <section className="flex h-full min-w-0 flex-col bg-muted/40">
-          {stage === "storyline" && outline ? (
+        <section className="flex h-full min-h-0 min-w-0 flex-col bg-muted/40">
+          {stage === "outlining" ? (
+            <div className="flex h-full flex-col items-center justify-center gap-4 p-6">
+              <div className="size-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="w-full max-w-md rounded-md border bg-background p-4 font-mono text-xs leading-relaxed text-muted-foreground">
+                {outlineLogs.map((l, i) => (<div key={i} className="whitespace-pre-wrap">{l}</div>))}
+                <div className="animate-pulse">▍</div>
+              </div>
+            </div>
+          ) : stage === "storyline" && outline ? (
             <StorylineBoard outline={outline} onChange={setOutline} />
           ) : slides.length > 0 ? (
             <div className="flex h-full flex-col p-6">
