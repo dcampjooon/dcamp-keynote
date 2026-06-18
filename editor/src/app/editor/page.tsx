@@ -14,7 +14,7 @@ import { StorylineBoard } from "@/components/StorylineBoard";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
 import type { Outline } from "@/lib/slide-schema";
 import { SEED_SLIDES } from "@/lib/seed-deck";
-import { THEMES, DEFAULT_THEME, pageDims, type Theme } from "@/lib/themes";
+import { DEFAULT_THEME, pageDims, type Theme } from "@/lib/themes";
 
 type Stage = "idle" | "outlining" | "storyline" | "generating" | "ready";
 
@@ -30,7 +30,7 @@ export default function EditorPage() {
   const [patchInput, setPatchInput] = useState("");
   const [patching, setPatching] = useState(false);
   const [themeId, setThemeId] = useState("dcamp-white");
-  const [templates, setTemplates] = useState<Theme[]>(THEMES);
+  const [templates, setTemplates] = useState<Theme[]>([]);
 
   const theme = templates.find((t) => t.id === themeId) ?? DEFAULT_THEME;
 
@@ -187,7 +187,7 @@ export default function EditorPage() {
         <aside className="flex h-full flex-col gap-4 overflow-y-auto border-r bg-card p-5">
           <div className="flex items-center gap-2">
             <Link href="/" className="rounded-md border px-2.5 py-1 text-sm hover:bg-accent">← 홈</Link>
-            <h1 className="text-lg font-bold">키노트 에디터</h1>
+            <h1 className="text-lg font-medium">키노트 에디터</h1>
           </div>
 
           {(stage === "idle" || stage === "outlining") && (
@@ -223,7 +223,7 @@ export default function EditorPage() {
           {stage === "storyline" && outline && (
             <div className="flex flex-col gap-3">
               <div className="rounded-md bg-primary/10 p-3 text-xs text-muted-foreground">
-                <span className="font-bold text-foreground">1단계 · 스토리라인</span> — 오른쪽에서 슬라이드별로 다듬고 참고 자료를 붙여넣으세요.
+                <span className="font-medium text-foreground">1단계 · 스토리라인</span> — 오른쪽에서 슬라이드별로 다듬고 참고 자료를 붙여넣으세요.
               </div>
               <label className="text-sm font-medium">발표 제목</label>
               <Input value={outline.title} onChange={(e) => setOutline({ ...outline, title: e.target.value })} />
@@ -245,7 +245,7 @@ export default function EditorPage() {
           {stage === "ready" && (
             <div className="flex flex-col gap-3">
               <div className="rounded-md bg-primary/10 p-3 text-sm">
-                <div className="font-semibold">{slides.length}장 · {index + 1}번째</div>
+                <div className="font-medium">{slides.length}장 · {index + 1}번째</div>
                 <p className="mt-1 text-muted-foreground">{editMode ? "텍스트를 클릭해 직접 수정하세요. (자동 저장)" : "미리보기에서 ←/→ 로 이동하세요."}</p>
               </div>
               <div className="flex gap-2">
@@ -254,7 +254,7 @@ export default function EditorPage() {
                 <Button variant="outline" disabled={!deckId} onClick={() => deckId && window.open(`/api/export/pptx?deckId=${deckId}`, "_blank")} title="PowerPoint(.pptx)로 내보내기">⬇ PPTX</Button>
               </div>
               <div className="flex flex-col gap-2 rounded-md border p-3">
-                <div className="text-xs font-bold text-muted-foreground">이 슬라이드 수정 요청 · {index + 1}장</div>
+                <div className="text-xs font-medium text-muted-foreground">이 슬라이드 수정 요청 · {index + 1}장</div>
                 <Textarea value={patchInput} onChange={(e) => setPatchInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void sendPatch(); } }}
                   placeholder="예: 헤드라인을 더 강하게 / 불릿 하나 추가 / 마지막 항목 삭제 (⌘+Enter)" rows={2} disabled={patching} />
@@ -262,7 +262,7 @@ export default function EditorPage() {
               </div>
               {slides[index]?.notes && (
                 <div className="rounded-md border p-3 text-sm">
-                  <div className="mb-1 text-xs font-bold text-muted-foreground">발표자 노트 · {index + 1}장</div>
+                  <div className="mb-1 text-xs font-medium text-muted-foreground">발표자 노트 · {index + 1}장</div>
                   {slides[index].notes}
                 </div>
               )}

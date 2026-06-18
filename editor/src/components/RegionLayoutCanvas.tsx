@@ -124,7 +124,7 @@ export function RegionLayoutCanvas({
           }
           // text / footer
           const color = r.color || (r.kind === "footer" ? "var(--ink-faint)" : undefined);
-          const fontWeight = r.weight === "black" ? 900 : r.weight === "bold" ? 700 : 400;
+          const fontWeight = r.weight === "normal" ? 400 : 500; // 전체 medium 기조
           return (
             <div
               key={r.id}

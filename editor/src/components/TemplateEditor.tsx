@@ -230,13 +230,13 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
         <aside className="flex h-full flex-col gap-4 overflow-y-auto border-r bg-card p-5">
           <div className="flex items-center gap-2">
             <Link href="/templates" className="rounded-md border px-2.5 py-1 text-sm hover:bg-accent">← 템플릿</Link>
-            <h1 className="text-lg font-bold">{templateId && !readOnly ? "템플릿 수정" : "새 템플릿"}</h1>
+            <h1 className="text-lg font-medium">{templateId && !readOnly ? "템플릿 수정" : "새 템플릿"}</h1>
           </div>
           {readOnly && <div className="rounded-md bg-muted p-2.5 text-xs text-muted-foreground">빌트인 템플릿입니다. 값을 바꿔 새 템플릿으로 저장하세요.</div>}
 
           {/* PDF 분석 */}
           <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
-            <div className="text-xs font-bold text-primary">샘플 PDF로 템플릿 만들기</div>
+            <div className="text-xs font-medium text-primary">샘플 PDF로 템플릿 만들기</div>
             <p className="text-xs text-muted-foreground">잘 만든 발표 PDF를 올리면 레이아웃(표지·간지·본문)과 색·폰트·여백을 분석해 아래를 채웁니다.</p>
             <label className="inline-flex cursor-pointer items-center justify-center rounded-md border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
               {analyzing ? "분석 중…" : "📄 PDF 업로드 분석"}
@@ -266,13 +266,13 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
           {/* 레이아웃 목록 */}
           <div className="flex flex-col gap-2.5 rounded-md border p-3">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-bold text-muted-foreground">레이아웃 ({layouts.length})</div>
+              <div className="text-xs font-medium text-muted-foreground">레이아웃 ({layouts.length})</div>
               <button className="text-xs text-primary hover:underline" onClick={addLayout}>+ 추가</button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {layouts.map((l, i) => (
                 <button key={l.id + i} onClick={() => setSel(i)}
-                  className={`rounded-md border px-2.5 py-1 text-xs ${i === sel ? "border-primary bg-primary/10 font-semibold" : "hover:border-muted-foreground/40"}`}>
+                  className={`rounded-md border px-2.5 py-1 text-xs ${i === sel ? "border-primary bg-primary/10 font-medium" : "hover:border-muted-foreground/40"}`}>
                   {l.name || ROLE_LABEL[l.role]}
                 </button>
               ))}
@@ -324,13 +324,13 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
             {/* 영역(zone) 편집 */}
             <div className="mt-1 flex flex-col gap-2 border-t pt-2.5">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-muted-foreground">영역 ({regions.length}) — 미리보기에서 드래그·리사이즈</div>
+                <div className="text-xs font-medium text-muted-foreground">영역 ({regions.length}) — 미리보기에서 드래그·리사이즈</div>
                 <button className="text-xs text-primary hover:underline" onClick={addRegion}>+ 영역</button>
               </div>
               <div className="flex flex-wrap gap-1">
                 {regions.map((r) => (
                   <button key={r.id} onClick={() => setSelReg(r.id)}
-                    className={`rounded border px-1.5 py-0.5 text-[10px] ${r.id === selReg ? "border-primary bg-primary/10 font-semibold" : "hover:border-muted-foreground/40"}`}>
+                    className={`rounded border px-1.5 py-0.5 text-[10px] ${r.id === selReg ? "border-primary bg-primary/10 font-medium" : "hover:border-muted-foreground/40"}`}>
                     {r.label}{r.kind !== "text" ? `·${r.kind}` : ""}
                   </button>
                 ))}
@@ -393,7 +393,7 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
 
           {/* 전역 디자인 */}
           <div className="flex flex-col gap-2.5 rounded-md border p-3">
-            <div className="text-xs font-bold text-muted-foreground">전역 디자인</div>
+            <div className="text-xs font-medium text-muted-foreground">전역 디자인</div>
             <Row label="페이지 크기">
               <select value={page.size} onChange={(e) => setPage((p) => ({ ...p, size: e.target.value as PageSize }))} className="h-8 rounded-md border bg-background px-2 text-sm">
                 <option value="16:9">16:9 (와이드)</option><option value="a4">A4 (문서)</option>

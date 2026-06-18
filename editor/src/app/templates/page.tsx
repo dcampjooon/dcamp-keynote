@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
-import { THEMES, type Theme } from "@/lib/themes";
+import { type Theme } from "@/lib/themes";
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<Theme[]>(THEMES.map((t) => ({ ...t, builtin: true })));
+  const [templates, setTemplates] = useState<Theme[]>([]);
 
   async function load() {
     const d = await fetch("/api/templates").then((r) => r.json()).catch(() => null);
@@ -30,7 +30,7 @@ export default function TemplatesPage() {
       <header className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="rounded-md border px-2.5 py-1 text-sm hover:bg-accent">← 홈</Link>
-          <h1 className="text-2xl font-black">템플릿</h1>
+          <h1 className="text-2xl font-medium">템플릿</h1>
         </div>
         <Link href="/templates/new"><Button>+ 새 템플릿</Button></Link>
       </header>
@@ -41,7 +41,7 @@ export default function TemplatesPage() {
             <div className="h-20 w-full" style={{ background: `linear-gradient(120deg, ${t.swatch[0]}, ${t.swatch[1]})` }} />
             <div className="flex flex-1 flex-col p-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold">{t.name}</span>
+                <span className="text-sm font-medium">{t.name}</span>
                 {t.builtin && <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">기본</span>}
               </div>
               <div className="mt-auto flex gap-2 pt-3">

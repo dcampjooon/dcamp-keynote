@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40 p-6">
       <div className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm">
-        <h1 className="text-xl font-bold">키노트 에디터</h1>
+        <h1 className="text-xl font-medium">키노트 에디터</h1>
         <p className="mt-1 text-sm text-muted-foreground">{mode === "login" ? "로그인" : "계정 만들기"}</p>
 
         <div className="mt-5 flex flex-col gap-3">

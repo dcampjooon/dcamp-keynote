@@ -7,14 +7,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { THEMES, type Theme } from "@/lib/themes";
+import { DEFAULT_THEME, type Theme } from "@/lib/themes";
 
 type DeckSummary = { id: string; title: string; theme: { id?: string } | null; status: string; updated_at: string };
 
 export default function HomePage() {
   const router = useRouter();
   const [decks, setDecks] = useState<DeckSummary[]>([]);
-  const [templates, setTemplates] = useState<Theme[]>(THEMES);
+  const [templates, setTemplates] = useState<Theme[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,13 +24,13 @@ export default function HomePage() {
     ]).finally(() => setLoading(false));
   }, []);
 
-  const swatchOf = (id?: string) => (templates.find((t) => t.id === id) ?? THEMES[0]).swatch;
+  const swatchOf = (id?: string) => (templates.find((t) => t.id === id) ?? DEFAULT_THEME).swatch;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black">키노트 에디터</h1>
+          <h1 className="text-2xl font-medium">키노트 에디터</h1>
           <p className="mt-1 text-sm text-muted-foreground">자연어로 설명하면 애니메이션 발표를 만들어 드립니다.</p>
         </div>
         <div className="flex gap-2">
@@ -39,7 +39,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <h2 className="mb-3 text-sm font-bold text-muted-foreground">내 발표</h2>
+      <h2 className="mb-3 text-sm font-medium text-muted-foreground">내 발표</h2>
 
       {loading ? (
         <div className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</div>
@@ -69,7 +69,7 @@ export default function HomePage() {
               >
                 <div className="h-16 w-full" style={{ background: `linear-gradient(120deg, ${c1}, ${c2})` }} />
                 <div className="flex flex-1 flex-col p-3">
-                  <div className="line-clamp-2 text-sm font-semibold">{d.title}</div>
+                  <div className="line-clamp-2 text-sm font-medium">{d.title}</div>
                   <div className="mt-auto flex items-center justify-between pt-2 text-[11px] text-muted-foreground">
                     <span>{new Date(d.updated_at).toLocaleDateString()}</span>
                     <span className="opacity-0 transition group-hover:opacity-100">열기 →</span>

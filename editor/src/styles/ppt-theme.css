@@ -71,7 +71,7 @@
 }
 .ppt-brand {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.28em;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -79,7 +79,7 @@
 }
 .ppt-headline {
   font-size: var(--h-standard);
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.22;
   margin: 0 0 8px;
 }
@@ -93,7 +93,7 @@
 }
 .ppt-subhead {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink-dim);
   margin: 4px 0;
 }
@@ -132,21 +132,21 @@
   border-radius: var(--radius);
   padding: 16px 20px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
 }
 .ppt-callout.tone-success { border-color: var(--green); background: #f0fdf4; }
 .ppt-callout.tone-warn { border-color: var(--amber); background: #fffbeb; }
 .ppt-kpis { display: flex; gap: 28px; flex-wrap: wrap; }
 .ppt-kpi { display: flex; flex-direction: column; gap: 4px; }
-.ppt-kpi .num { font-size: 54px; font-weight: 900; line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.ppt-kpi .lbl { font-size: 16px; font-weight: 600; color: var(--ink-dim); }
+.ppt-kpi .num { font-size: 54px; font-weight: 500; line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ppt-kpi .lbl { font-size: 16px; font-weight: 500; color: var(--ink-dim); }
 .ppt-svgwrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; min-width: 0; width: 100%; }
 .ppt-svgwrap svg { display: block; width: 100%; height: 100%; max-height: 420px; }
 
 /* 다이어그램 SVG */
 .ppt-node rect { fill: #fff; }
-.ppt-node text { font-weight: 700; }
+.ppt-node text { font-weight: 500; }
 .ppt-edge { fill: none; stroke: #b9c4da; stroke-width: 2; }
 .ppt-edge.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ppt-draw 0.7s ease forwards; }
 @keyframes ppt-draw { to { stroke-dashoffset: 0; } }

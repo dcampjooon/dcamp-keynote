@@ -51,10 +51,10 @@ function blockH(b: Block, colW: number): number {
 function addBlock(slide: Slide, b: Block, x: number, y: number, w: number, h: number) {
   switch (b.type) {
     case "heading":
-      slide.addText(accentRuns(b.text, b.accent), { x, y, w, h, fontFace: FONT, fontSize: pt(40), bold: true, color: INK, align: "left", valign: "top" });
+      slide.addText(accentRuns(b.text, b.accent), { x, y, w, h, fontFace: FONT, fontSize: pt(40), bold: false, color: INK, align: "left", valign: "top" });
       break;
     case "subhead":
-      slide.addText(b.text, { x, y, w, h, fontFace: FONT, fontSize: pt(22), bold: true, color: INK_DIM, valign: "top" });
+      slide.addText(b.text, { x, y, w, h, fontFace: FONT, fontSize: pt(22), bold: false, color: INK_DIM, valign: "top" });
       break;
     case "paragraph":
       slide.addText(b.text, { x, y, w, h, fontFace: FONT, fontSize: pt(20), color: INK_DIM, valign: "top", lineSpacingMultiple: 1.3 });
@@ -69,7 +69,7 @@ function addBlock(slide: Slide, b: Block, x: number, y: number, w: number, h: nu
       const fill = b.tone === "success" ? "f0fdf4" : b.tone === "warn" ? "fffbeb" : "f3f7ff";
       const bar = b.tone === "success" ? HEX.green : b.tone === "warn" ? HEX.amber : ACCENT;
       slide.addShape("rect", { x, y, w: px(4), h, fill: { color: bar } });
-      slide.addText(b.text, { x: x + px(14), y, w: w - px(18), h, fontFace: FONT, fontSize: pt(20), bold: true, color: INK, valign: "middle", fill: { color: fill } });
+      slide.addText(b.text, { x: x + px(14), y, w: w - px(18), h, fontFace: FONT, fontSize: pt(20), bold: false, color: INK, valign: "middle", fill: { color: fill } });
       break;
     }
     case "kpi": {
@@ -77,8 +77,8 @@ function addBlock(slide: Slide, b: Block, x: number, y: number, w: number, h: nu
       const itemW = Math.min(2.8, w / n);
       b.items.forEach((k, i) => {
         const ix = x + i * itemW;
-        slide.addText(`${k.value.toLocaleString()}${k.suffix}`, { x: ix, y, w: itemW, h: 0.85, fontFace: FONT, fontSize: pt(50), bold: true, color: ACCENT, align: "left", valign: "top" });
-        slide.addText(k.label, { x: ix, y: y + 0.82, w: itemW, h: 0.35, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_DIM, align: "left", valign: "top" });
+        slide.addText(`${k.value.toLocaleString()}${k.suffix}`, { x: ix, y, w: itemW, h: 0.85, fontFace: FONT, fontSize: pt(50), bold: false, color: ACCENT, align: "left", valign: "top" });
+        slide.addText(k.label, { x: ix, y: y + 0.82, w: itemW, h: 0.35, fontFace: FONT, fontSize: pt(16), bold: false, color: INK_DIM, align: "left", valign: "top" });
       });
       break;
     }
@@ -147,7 +147,7 @@ function addDiagram(slide: Slide, b: Extract<Block, { type: "diagram" }>, rx: nu
       x: X(p.x), y: Y(p.y), w: NW * sc, h: NH * sc,
       shape: "roundRect", rectRadius: 0,
       fill: { color: "FFFFFF" }, line: { color, width: 1.75 },
-      fontFace: FONT, fontSize: pt(15), bold: true, color: INK, align: "center", valign: "middle",
+      fontFace: FONT, fontSize: pt(15), bold: false, color: INK, align: "center", valign: "middle",
     });
   }
 }
@@ -177,7 +177,7 @@ function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
     const totalH = (showTitle ? th : 0) + blocks.reduce((a, b) => a + blockH(b, CW), 0);
     let y = Math.max(MY + 0.6, (SLIDE_H - totalH) / 2);
     if (showTitle) {
-      s.addText(slide.title, { x: MX, y, w: CW, h: th, fontFace: FONT, fontSize: pt(spec.titleSize), bold: true, color: titleColor, align, valign: "middle" });
+      s.addText(slide.title, { x: MX, y, w: CW, h: th, fontFace: FONT, fontSize: pt(spec.titleSize), bold: false, color: titleColor, align, valign: "middle" });
       y += th;
     }
     for (const b of blocks) {
@@ -192,7 +192,7 @@ function layoutSlide(pptx: PptxGenJS, slide: RenderSlide, spec: LayoutSpec) {
   // 상단 정렬
   let top = MY;
   if (showTitle) {
-    s.addText(slide.title, { x: MX, y: top, w: CW, h: 0.9, fontFace: FONT, fontSize: pt(spec.titleSize), bold: true, color: titleColor, align, valign: "top" });
+    s.addText(slide.title, { x: MX, y: top, w: CW, h: 0.9, fontFace: FONT, fontSize: pt(spec.titleSize), bold: false, color: titleColor, align, valign: "top" });
     top += 1.05;
   }
   if (!hasCols) {
@@ -239,8 +239,8 @@ function addCentered(s: Slide, b: Block, x: number, y: number, w: number, h: num
     const sx = x + (w - totalW) / 2;
     b.items.forEach((k, i) => {
       const ix = sx + i * itemW;
-      s.addText(`${k.value.toLocaleString()}${k.suffix}`, { x: ix, y, w: itemW, h: 0.85, fontFace: FONT, fontSize: pt(50), bold: true, color: ACCENT, align: "center", valign: "top" });
-      s.addText(k.label, { x: ix, y: y + 0.82, w: itemW, h: 0.35, fontFace: FONT, fontSize: pt(16), bold: true, color: INK_DIM, align: "center", valign: "top" });
+      s.addText(`${k.value.toLocaleString()}${k.suffix}`, { x: ix, y, w: itemW, h: 0.85, fontFace: FONT, fontSize: pt(50), bold: false, color: ACCENT, align: "center", valign: "top" });
+      s.addText(k.label, { x: ix, y: y + 0.82, w: itemW, h: 0.35, fontFace: FONT, fontSize: pt(16), bold: false, color: INK_DIM, align: "center", valign: "top" });
     });
     return;
   }
@@ -251,7 +251,7 @@ function addCentered(s: Slide, b: Block, x: number, y: number, w: number, h: num
   // heading/subhead/paragraph 가운데 정렬
   const fs = b.type === "subhead" ? 22 : b.type === "paragraph" ? 20 : 28;
   const text = b.type === "heading" ? b.text : b.type === "subhead" ? b.text : b.text;
-  s.addText(text, { x, y, w, h, fontFace: FONT, fontSize: pt(fs), bold: b.type !== "paragraph", color: b.type === "paragraph" ? INK_DIM : INK, align: "center", valign: "top" });
+  s.addText(text, { x, y, w, h, fontFace: FONT, fontSize: pt(fs), bold: false, color: b.type === "paragraph" ? INK_DIM : INK, align: "center", valign: "top" });
 }
 
 export async function buildPptx(title: string, slides: RenderSlide[], accentHex?: string, fontFace?: string, layouts?: LayoutSpec[], page?: PageSpec): Promise<Buffer> {

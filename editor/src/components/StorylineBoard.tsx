@@ -40,7 +40,7 @@ export function StorylineBoard({ outline, onChange }: { outline: Outline; onChan
       {outline.slides.map((s, i) => (
         <div key={i} className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold">{i + 1}</span>
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium">{i + 1}</span>
             <select
               value={s.layout}
               onChange={(e) => setSlide(i, { layout: e.target.value as SlideLayout })}
@@ -58,7 +58,7 @@ export function StorylineBoard({ outline, onChange }: { outline: Outline; onChan
           </div>
 
           <div className="flex flex-col gap-2">
-            <Input value={s.headline} onChange={(e) => setSlide(i, { headline: e.target.value })} placeholder="헤드라인(결론 한 줄)" className="font-semibold" />
+            <Input value={s.headline} onChange={(e) => setSlide(i, { headline: e.target.value })} placeholder="헤드라인(결론 한 줄)" className="font-medium" />
             <Input value={s.purpose} onChange={(e) => setSlide(i, { purpose: e.target.value })} placeholder="이 슬라이드의 목적/메시지" className="text-sm" />
             <Textarea
               value={s.blockHints.join("\n")}

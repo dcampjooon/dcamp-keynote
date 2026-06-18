@@ -94,15 +94,11 @@ export function tokensFrom(accent1: string, accent2: string, canvasBg: string): 
   return { "--blue": accent1, "--cyan": accent2, "--grad": `linear-gradient(120deg, ${accent1}, ${accent2})`, "--canvas-bg": canvasBg };
 }
 
-export const THEMES: Theme[] = [
-  { id: "dcamp-white", name: "디캠프 화이트", desc: "블루→시안 (기본)", tokens: {}, surround: "#0a0e24", swatch: ["#2f6df6", "#14b8c4"] },
-  { id: "ocean", name: "오션", desc: "딥 블루", tokens: { "--blue": "#2563eb", "--cyan": "#3b82f6", "--grad": "linear-gradient(120deg,#1d4ed8,#3b82f6)" }, surround: "#0a1330", swatch: ["#1d4ed8", "#3b82f6"] },
-  { id: "emerald", name: "에메랄드", desc: "그린→틸", tokens: { "--blue": "#059669", "--cyan": "#10b981", "--grad": "linear-gradient(120deg,#047857,#10b981)" }, surround: "#04140e", swatch: ["#047857", "#10b981"] },
-  { id: "sunset", name: "선셋", desc: "앰버→오렌지", tokens: { "--blue": "#ea580c", "--cyan": "#f59e0b", "--grad": "linear-gradient(120deg,#ea580c,#f59e0b)" }, surround: "#1a0f08", swatch: ["#ea580c", "#f59e0b"] },
-  { id: "graphite", name: "그래파이트", desc: "모노톤", tokens: { "--blue": "#475569", "--cyan": "#64748b", "--grad": "linear-gradient(120deg,#334155,#64748b)", "--canvas-bg": "#fbfcfd" }, surround: "#111419", swatch: ["#334155", "#64748b"] },
-];
+// 빌트인(기본 제공) 템플릿은 제거 — 사용자가 PDF로 만든 템플릿만 노출한다.
+export const THEMES: Theme[] = [];
 
-export const DEFAULT_THEME = THEMES[0];
+// 폴백 테마(목록에 노출 안 됨): 빈 토큰 → ppt-theme.css 기본값(Pretendard·흰 배경) 사용.
+export const DEFAULT_THEME: Theme = { id: "default", name: "기본", desc: "", tokens: {}, surround: "#0a0e24", swatch: ["#2f6df6", "#14b8c4"] };
 export function themeById(id?: string | null): Theme {
   return THEMES.find((t) => t.id === id) ?? DEFAULT_THEME;
 }
