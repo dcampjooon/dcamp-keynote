@@ -8,6 +8,7 @@ import Link from "next/link";
 import { toast, Toaster } from "sonner";
 import { renderPdfPageToDataUrl } from "@/lib/pdf-render";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { DeckView } from "@/components/slide-renderer/DeckView";
 import { RegionLayoutCanvas } from "@/components/RegionLayoutCanvas";
 import type { RenderSlide } from "@/components/slide-renderer/SlideView";
@@ -292,6 +293,11 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
                   {(["cover", "section", "body"] as LayoutRole[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
                 </select>
               </Row>
+              <div className="flex flex-col gap-1 rounded-md bg-primary/5 p-2">
+                <label className="text-xs font-bold text-primary">이 장표 규칙 (생성 시 강제)</label>
+                <Textarea value={cur.rule ?? ""} onChange={(e) => setLayout({ rule: e.target.value })} rows={3} className="text-xs"
+                  placeholder={"이 장표 전체에 적용할 규칙·금지사항.\n예) 정의된 영역 외 임의 텍스트·정렬 금지. 한글 keep-all. 강조색은 헤드라인에만."} />
+              </div>
               <ToggleColor label="배경색 지정" value={cur.bg} fallback={s.surround} onChange={(v) => setLayout({ bg: v })} />
               <ToggleColor label="텍스트색 지정" value={cur.fg} fallback="#ffffff" onChange={(v) => setLayout({ fg: v })} />
               <Row label="가로 정렬">
@@ -391,6 +397,13 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
                       </span>
                     </Row>
                   )}
+                  <div className="flex flex-col gap-1 rounded bg-primary/5 p-2">
+                    <label className="text-[11px] font-bold text-primary">이 영역 규칙 (생성 시 강제)</label>
+                    <Textarea value={region.rule ?? ""} onChange={(e) => setRegion({ rule: e.target.value })} rows={3} className="text-xs"
+                      placeholder={region.kind === "placeholder"
+                        ? "예) 제목·내용을 참고해 미니멀 일러스트 스타일 이미지를 생성해 넣는다. 캡션은 14px로 하단."
+                        : "예) 제목을 2줄로, 조사 최소화·명사형 종결. 한글 keep-all. 날짜는 YYYY.MM.DD."} />
+                  </div>
                   <button className="self-start text-xs text-destructive hover:underline" onClick={removeRegion}>영역 삭제</button>
                 </div>
               )}

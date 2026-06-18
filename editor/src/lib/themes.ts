@@ -34,6 +34,7 @@ export type Region = {
   align?: "left" | "center" | "right";
   orient?: "h" | "v"; // line 방향
   thickness?: number; // line 두께 px
+  rule?: string; // 이 영역에 적용할 상세 작성 규칙(자유 텍스트) — 생성 시 그대로 강제
 };
 
 /** 한 종류의 슬라이드 레이아웃이 어떻게 구성되는지 — PDF 분석으로 채워지고 렌더러가 그대로 그린다. */
@@ -49,6 +50,7 @@ export type LayoutSpec = {
   accent: AccentStyle; // 제목 주변 강조 요소
   kicker: boolean; // (레거시) 상단 eyebrow 표시 — regions 없을 때 폴백용
   footer: boolean; // (레거시) 하단 푸터 표시 — regions 없을 때 폴백용
+  rule?: string; // 이 장표(레이아웃) 전체에 적용할 규칙·금지사항(자유 텍스트) — 생성 시 강제
   columns: 1 | 2 | 3; // 본문 하단 콘텐츠 컬럼 수
   colBg?: string; // 컬럼 영역 패널 배경 hex(빈 문자열=패널 없음)
   colGap?: number; // 컬럼 사이 간격 px

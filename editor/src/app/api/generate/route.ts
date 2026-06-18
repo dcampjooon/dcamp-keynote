@@ -14,26 +14,33 @@ const SlideContent = Slide.omit({ id: true });
 // → non-strict 도구 호출로 스키마를 '힌트'로 주고, zod로 직접 검증한다(문법 컴파일 회피).
 const SLIDE_TOOL_SCHEMA = z.toJSONSchema(SlideContent) as Record<string, unknown>;
 
-/** 선택된 템플릿 레이아웃의 영역(region) 구성을 생성 프롬프트용 가이드 텍스트로 변환. */
+/** 선택된 템플릿 레이아웃의 규칙·영역(region) 구성을 생성 프롬프트용 가이드로 변환(규칙 강제). */
 function regionGuide(spec: LayoutSpec): string {
   const parts: string[] = [];
-  const regions = spec.regions ?? [];
-  const items = regions
+  if (spec.rule?.trim()) parts.push(`[이 장표 규칙 — 반드시 준수]\n${spec.rule.trim()}`);
+
+  const items = (spec.regions ?? [])
+    .filter((r) => r.kind === "text" || r.kind === "placeholder")
     .map((r) => {
-      if (r.kind === "placeholder") return `· "${r.label}" 차트/이미지 자리 — diagram(데이터 도식) 또는 image 블록으로 채움`;
-      if (r.kind === "line" || r.kind === "footer") return null; // 구분선·푸터는 렌더가 처리
-      const lines = ((r.sampleText ?? "").match(/\n/g)?.length ?? 0) + 1;
-      const ex = (r.sampleText ?? "").replace(/\s+/g, " ").trim().slice(0, 36);
-      return `· "${r.label}" 텍스트 — 약 ${lines}줄 분량${ex ? ` (예: "${ex}")` : ""}`;
-    })
-    .filter(Boolean);
+      const head =
+        r.kind === "placeholder"
+          ? `"${r.label}" 이미지/도식 자리 → image 블록(규칙의 생성 지시를 prompt에 반영) 또는 diagram`
+          : `"${r.label}" 텍스트`;
+      const meta: string[] = [];
+      if (r.fontSize) meta.push(`${r.fontSize}px`);
+      if (r.align && r.align !== "left") meta.push(`${r.align} 정렬`);
+      const ex = (r.sampleText ?? "").replace(/\s+/g, " ").trim().slice(0, 40);
+      if (ex) meta.push(`예: "${ex}"`);
+      const rule = r.rule?.trim() ? `\n    └ 규칙: ${r.rule.trim()}` : "";
+      return `· ${head}${meta.length ? ` (${meta.join(", ")})` : ""}${rule}`;
+    });
   if (items.length) {
-    parts.push(`[이 슬라이드는 선택된 템플릿의 영역 구성을 따른다 — 각 영역에 맞는 블록을 채워라]\n${items.join("\n")}`);
+    parts.push(`[영역 구성 — 각 영역을 그 규칙대로 채운다. 정의된 영역 외 임의 텍스트·요소·정렬을 추가하지 않는다]\n${items.join("\n")}`);
   }
   if (spec.columns >= 2) {
-    parts.push(`본문 하단은 ${spec.columns}단 — 차트/카드 블록을 컬럼으로 나눠 배치(좌=left, ${spec.columns >= 3 ? "가운데=mid, " : ""}우=right).`);
+    parts.push(`본문 하단은 ${spec.columns}단 — 블록을 컬럼으로 나눠 배치(좌=left${spec.columns >= 3 ? ", 가운데=mid" : ""}, 우=right).`);
   }
-  return parts.join("\n");
+  return parts.join("\n\n");
 }
 
 export async function POST(request: Request) {
