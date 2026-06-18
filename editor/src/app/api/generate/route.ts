@@ -6,11 +6,35 @@ import { anthropic, MODEL } from "@/lib/anthropic";
 import { SLIDE_SYSTEM, deckContext } from "@/lib/prompts";
 import { Outline, Slide, type SlidePlan } from "@/lib/slide-schema";
 import { supabaseAdmin, DEV_USER_ID } from "@/lib/supabase/admin";
+import { resolveTheme } from "@/lib/templates-server";
+import { layoutForSlide, type LayoutSpec } from "@/lib/themes";
 
 const SlideContent = Slide.omit({ id: true });
 // 블록 union이 커서 strict structured output은 "grammar too large"로 거부된다.
 // → non-strict 도구 호출로 스키마를 '힌트'로 주고, zod로 직접 검증한다(문법 컴파일 회피).
 const SLIDE_TOOL_SCHEMA = z.toJSONSchema(SlideContent) as Record<string, unknown>;
+
+/** 선택된 템플릿 레이아웃의 영역(region) 구성을 생성 프롬프트용 가이드 텍스트로 변환. */
+function regionGuide(spec: LayoutSpec): string {
+  const parts: string[] = [];
+  const regions = spec.regions ?? [];
+  const items = regions
+    .map((r) => {
+      if (r.kind === "placeholder") return `· "${r.label}" 차트/이미지 자리 — diagram(데이터 도식) 또는 image 블록으로 채움`;
+      if (r.kind === "line" || r.kind === "footer") return null; // 구분선·푸터는 렌더가 처리
+      const lines = ((r.sampleText ?? "").match(/\n/g)?.length ?? 0) + 1;
+      const ex = (r.sampleText ?? "").replace(/\s+/g, " ").trim().slice(0, 36);
+      return `· "${r.label}" 텍스트 — 약 ${lines}줄 분량${ex ? ` (예: "${ex}")` : ""}`;
+    })
+    .filter(Boolean);
+  if (items.length) {
+    parts.push(`[이 슬라이드는 선택된 템플릿의 영역 구성을 따른다 — 각 영역에 맞는 블록을 채워라]\n${items.join("\n")}`);
+  }
+  if (spec.columns >= 2) {
+    parts.push(`본문 하단은 ${spec.columns}단 — 차트/카드 블록을 컬럼으로 나눠 배치(좌=left, ${spec.columns >= 3 ? "가운데=mid, " : ""}우=right).`);
+  }
+  return parts.join("\n");
+}
 
 export async function POST(request: Request) {
   try {
@@ -47,11 +71,15 @@ export async function POST(request: Request) {
       outline.slides.map((s) => `[${s.layout}] ${s.headline}`),
     );
 
+    // 선택된 템플릿의 레이아웃들 — 슬라이드 role에 맞는 영역 구성을 생성에 반영
+    const theme = await resolveTheme(themeId);
+
     // 2) 슬라이드 단위 생성 + 검증 + 저장
     const slides = [];
     for (let i = 0; i < outline.slides.length; i++) {
       const plan = outline.slides[i];
-      const content = await generateSlide(ctx, plan, i + 1, outline.slides.length);
+      const guide = regionGuide(layoutForSlide(plan.layout, theme.layouts));
+      const content = await generateSlide(ctx, plan, i + 1, outline.slides.length, guide);
 
       const { data: row, error: slideErr } = await supabase
         .from("slides")
@@ -76,12 +104,12 @@ export async function POST(request: Request) {
 }
 
 /** 슬라이드 한 장 생성. parse 실패 시 1회 리페어 후, 그래도 실패하면 최소 슬라이드로 폴백. */
-async function generateSlide(ctx: string, plan: SlidePlan, n: number, total: number) {
+async function generateSlide(ctx: string, plan: SlidePlan, n: number, total: number, layoutGuide = "") {
   const planText = `[이 슬라이드(${n}/${total}) 계획]
 목적: ${plan.purpose}
 헤드라인: ${plan.headline}
 레이아웃: ${plan.layout}
-들어갈 요소: ${plan.blockHints.join(" / ")}${plan.material?.trim() ? `\n참고 자료(이 내용을 우선 반영):\n${plan.material.trim()}` : ""}`;
+들어갈 요소: ${plan.blockHints.join(" / ")}${plan.material?.trim() ? `\n참고 자료(이 내용을 우선 반영):\n${plan.material.trim()}` : ""}${layoutGuide ? `\n\n${layoutGuide}` : ""}`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const msg = await anthropic().messages.create({
