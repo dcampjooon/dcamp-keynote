@@ -113,7 +113,13 @@ export function TemplateEditor({ initial, templateId }: { initial?: Theme; templ
     ];
     setLogs([STEPS[0]]);
     let i = 1;
-    const iv = setInterval(() => { if (i < STEPS.length) setLogs((l) => [...l, STEPS[i++]]); }, 2200);
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      if (i < STEPS.length) { setLogs((l) => [...l, STEPS[i++]]); return; }
+      // 단계 안내가 끝나면 경과 시간을 갱신해 '멈춘 것처럼' 보이지 않게(분석은 보통 1~3분, 페이지 많으면 더).
+      const sec = Math.round((Date.now() - t0) / 1000);
+      setLogs((l) => [...l.slice(0, STEPS.length), `⏳ 모델이 PDF를 읽고 분석 중… (${sec}s 경과 · 보통 1~3분, 페이지가 많으면 더 걸립니다)`]);
+    }, 1000);
     try {
       const buf = await file.arrayBuffer();
       const fd = new FormData();

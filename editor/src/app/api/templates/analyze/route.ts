@@ -114,9 +114,37 @@ async function analyzeViaApi(pdfBase64: string): Promise<unknown> {
   return tu.input;
 }
 
+/** CLI result 텍스트에서 JSON 객체를 견고하게 추출(코드펜스 우선 → 중괄호 균형 스캔). */
+function extractJson(text: string): unknown {
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const src = fence ? fence[1] : text;
+  const start = src.indexOf("{");
+  if (start < 0) throw new Error("결과에서 JSON 객체를 찾지 못함");
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < src.length; i++) {
+    const c = src[i];
+    if (inStr) { if (esc) esc = false; else if (c === "\\") esc = true; else if (c === '"') inStr = false; }
+    else if (c === '"') inStr = true;
+    else if (c === "{") depth++;
+    else if (c === "}" && --depth === 0) return JSON.parse(src.slice(start, i + 1));
+  }
+  throw new Error("결과의 JSON 객체가 완결되지 않음");
+}
+
 /** 로컬 Claude Code CLI(구독 인증)로 분석 — 추가 종량제 비용 없음. Read 도구로 PDF를 직접 본다. */
 async function analyzeViaCli(pdfPath: string): Promise<unknown> {
-  const prompt = `${SYSTEM}\n\n분석할 PDF(절대경로): ${pdfPath}\nRead 도구로 이 PDF의 모든 페이지를 읽고, 위 기준대로 디자인 시스템을 분석해 structured output(JSON)으로 반환하라. ${USER_MSG}`;
+  const prompt = `${SYSTEM}
+
+분석할 PDF(절대경로): ${pdfPath}
+Read 도구로 이 PDF의 모든 페이지를 읽고, 위 기준대로 디자인 시스템을 분석하라. ${USER_MSG}
+
+[필수 출력 형식] 분석을 마치면 마지막 메시지에 **아래 JSON Schema를 정확히 따르는 JSON 객체 하나만** 출력하라.
+- 키 이름·중첩 구조를 스키마에 정의된 그대로 사용하라. 절대 다른 키 이름을 발명하지 말 것(예: accent1·ink·canvasBg·fontId·layouts[].role·regions[].kind/w/h 등 그대로).
+- 모든 required 필드를 채운다.
+- 마크다운 코드펜스(\`\`\`)·설명 문장·인사말 없이 '{' 로 시작해 '}' 로 끝나야 한다.
+
+JSON Schema:
+${JSON.stringify(TOOL_SCHEMA)}`;
   const args = [
     "-p", prompt,
     "--output-format", "json",
@@ -132,13 +160,13 @@ async function analyzeViaCli(pdfPath: string): Promise<unknown> {
     PATH: process.env.PATH,
     CLAUDE_CODE_OAUTH_TOKEN: process.env.CLAUDE_CODE_OAUTH_TOKEN,
   } as unknown as NodeJS.ProcessEnv;
-  const { stdout } = await execFileP("claude", args, { env, maxBuffer: 16 * 1024 * 1024, timeout: 240_000 });
+  const { stdout } = await execFileP("claude", args, { env, maxBuffer: 16 * 1024 * 1024, timeout: 300_000 });
   const envelope = JSON.parse(stdout) as { is_error?: boolean; result?: string; structured_output?: unknown };
   if (envelope.is_error) throw new Error(envelope.result || "CLI 분석 실패");
-  if (envelope.structured_output) return envelope.structured_output;
-  const m = (envelope.result ?? "").match(/\{[\s\S]*\}/); // 폴백: result 텍스트에서 JSON 추출
-  if (!m) throw new Error("CLI 분석 결과에서 JSON을 찾지 못함");
-  return JSON.parse(m[0]);
+  // Read 도구를 쓰는 멀티턴에선 structured_output이 비므로 result 텍스트에서 JSON을 추출(견고 파서).
+  const so = envelope.structured_output;
+  if (so && typeof so === "object" && Object.keys(so as object).length) return so;
+  return extractJson(envelope.result ?? "");
 }
 
 export async function POST(request: Request) {
