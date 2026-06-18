@@ -26,6 +26,15 @@ export default function HomePage() {
 
   const swatchOf = (id?: string) => (templates.find((t) => t.id === id) ?? DEFAULT_THEME).swatch;
 
+  async function delDeck(e: React.MouseEvent, id: string, title: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm(`'${title}' 발표를 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    const res = await fetch(`/api/deck/${id}`, { method: "DELETE" });
+    if (res.ok) setDecks((ds) => ds.filter((x) => x.id !== id));
+    else alert("삭제에 실패했습니다.");
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-8 flex items-center justify-between">
@@ -65,8 +74,15 @@ export default function HomePage() {
               <Link
                 key={d.id}
                 href={`/editor?deck=${d.id}`}
-                className="group flex min-h-36 flex-col overflow-hidden rounded-xl border bg-card transition hover:shadow-md"
+                className="group relative flex min-h-36 flex-col overflow-hidden rounded-xl border bg-card transition hover:shadow-md"
               >
+                <button
+                  onClick={(e) => void delDeck(e, d.id, d.title)}
+                  aria-label="삭제"
+                  className="absolute right-2 top-2 z-10 flex size-7 items-center justify-center rounded-md bg-black/35 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
+                >
+                  ✕
+                </button>
                 <div className="h-16 w-full" style={{ background: `linear-gradient(120deg, ${c1}, ${c2})` }} />
                 <div className="flex flex-1 flex-col p-3">
                   <div className="line-clamp-2 text-sm font-medium">{d.title}</div>
